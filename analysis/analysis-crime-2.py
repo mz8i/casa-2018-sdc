@@ -81,7 +81,7 @@ export_2017=sliced[sliced.Year == 2017]
 
 sliced["Primary Type"].value_counts()
 
-#CLEANING
+#CLEANING ;
 #RENAMING
 
 sliced.loc[sliced["Primary Type"] == "NON - CRIMINAL","Primary Type"]="NON-CRIMINAL"
