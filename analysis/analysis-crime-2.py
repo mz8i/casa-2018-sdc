@@ -96,6 +96,7 @@ sliced.loc[sliced["Primary Type"] == "OTHER NARCOTIC VIOLATION","Primary Type"]=
 spatial_crime=sliced[sliced.Latitude.notnull()]
 
 
+# let's put more analysis here
 
 
 
