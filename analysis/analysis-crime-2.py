@@ -157,6 +157,23 @@ spatial_crime=sliced[sliced.Latitude.notnull()]
 
 # let's put more analysis here
 
+#HEATMAP################################################################
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newC = sliced[sliced["Month"] >= 1].groupby(["Hour", "Top10"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newC = sliced_newC.reset_index(name="Count")
+sliced_newC["Sum"]=sliced_newC["Count"]/sliced_newC.groupby("Top10")["Count"].transform(np.sum)
+
+
+
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newC.pivot("Top10","Hour", "Sum"), annot=False, cmap="BuPu")
+plt.xticks(rotation=45)
+####################################################################
+
+
+
+
 #HEATMAP##################################################################
 # Getting unique values after grouping by HOUR and MONTH
 sliced_new = sliced[sliced["Month"] >= 1].groupby(["Hour", "Month"])["Crime1"].size()
@@ -185,7 +202,6 @@ sliced_new['CountN']=sliced_new['Count']/sliced_new['Month'].map(days_in_month)
 #Plot the Heatmap
 sns.heatmap(sliced_new.pivot("Hour", "Month", "CountN"), annot=False, cmap="BuPu")
 ####################################################################
-
 
 
 #HEATMAP################################################################
