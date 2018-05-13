@@ -17,26 +17,39 @@ import os
 analysis_dir = os.getcwd()
 data_dir = os.path.join(analysis_dir, 'data')
 
-# IMPORT NECESSARY PACKAGES
-# IMPORT DATA
-data = pd.read_csv(os.path.join(data_dir, "Crimes_-_2001_to_present.csv"))
-
+# IMPORT NECESSARY PACKAGES##############################################
+## IMPORT DATA
+###Crime
+data = pd.read_csv(os.path.join(data_dir, "Crimes_-_2001_to_present.csv")) 
+###Light
+datasun = pd.read_csv(os.path.join(data_dir, "Night_Day_time1.csv"))
 data.head
+
+#CLEANING################################################################
+########################RENAMING and grouping
+
+sliced["Primary Type"].value_counts()
+sliced.loc[sliced["Primary Type"] == "NON - CRIMINAL","Primary Type"]="NON-CRIMINAL"
+sliced.loc[sliced["Primary Type"] == "NON-CRIMINAL (SUBJECT SPECIFIED)","Primary Type"]="NON-CRIMINAL"
+
+sliced.loc[sliced["Primary Type"] == "OTHER NARCOTIC VIOLATION","Primary Type"]="NARCOTICS"
+sliced["Primary Type"].value_counts()
 
 
 
 # iloc[row slicing, column slicing]
 sliced=data.iloc[:, :]
-
 from matplotlib import pyplot as plt
-
 
 #for time data
 import datetime
 
-date_test = "03/18/2015 07:44:00 PM"
 #Read as date data
+date_test = "03/18/2015 07:44:00 PM"
 sliced['RealDate'] =  pd.to_datetime(sliced['Date'], format="%m/%d/%Y  %I:%M:%S %p")
+
+pd.to_datetime(datasun['Astr Start'], format="%H:%M")
+
 
 sliced['Day'] = sliced['RealDate'].dt.day
 
@@ -56,6 +69,20 @@ sliced['tesdate'] = sliced['Month'].apply(str).str.zfill(2) +"."+ sliced['Day'].
 sliced['MD'] =  pd.to_datetime(sliced['tesdate'], format="%m.%d")
 
 #Subsetting for Each year
+sliced_2001=sliced[sliced.Year == 2001]
+sliced_2002=sliced[sliced.Year == 2002]
+sliced_2003=sliced[sliced.Year == 2003]
+sliced_2004=sliced[sliced.Year == 2004]
+sliced_2005=sliced[sliced.Year == 2005]
+sliced_2006=sliced[sliced.Year == 2006]
+sliced_2007=sliced[sliced.Year == 2007]
+sliced_2008=sliced[sliced.Year == 2008]
+sliced_2009=sliced[sliced.Year == 2009]
+sliced_2010=sliced[sliced.Year == 2010]
+sliced_2011=sliced[sliced.Year == 2011]
+sliced_2012=sliced[sliced.Year == 2012]
+sliced_2013=sliced[sliced.Year == 2013]
+sliced_2014=sliced[sliced.Year == 2014]
 sliced_2015=sliced[sliced.Year == 2015]
 sliced_2016=sliced[sliced.Year == 2016]
 sliced_2017=sliced[sliced.Year == 2017]
@@ -74,10 +101,13 @@ sliced_0223=sliced_23[sliced_23.Day != 1]
 sliced_29=sliced_0223[sliced_0223.tesdate != "02.29"]
 
 #PIE PLOT###############################################################"
+
+sliced["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 sliced_2015["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 sliced_2016["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 sliced_2017["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 
+sliced["Top10"].value_counts().plot(kind="pie",autopct="%.2f")
 #Exported CSV per year
 export_2016=sliced[sliced.Year == 2016]
 export_2017=sliced[sliced.Year == 2017]
@@ -89,13 +119,35 @@ export_2017=sliced[sliced.Year == 2017]
 
 
 #CLEANING################################################################ ;
-#RENAMING and grouping
+########################RENAMING and grouping
 
 sliced["Primary Type"].value_counts()
+sliced_2017["Primary Type"].value_counts()
+sliced_2016["Primary Type"].value_counts()
+sliced_2015["Primary Type"].value_counts()
+sliced_2014["Primary Type"].value_counts()
+sliced_2013["Primary Type"].value_counts()
+sliced_2012["Primary Type"].value_counts()
+sliced_2011["Primary Type"].value_counts()
+sliced_2010["Primary Type"].value_counts()
+
 sliced.loc[sliced["Primary Type"] == "NON - CRIMINAL","Primary Type"]="NON-CRIMINAL"
 sliced.loc[sliced["Primary Type"] == "NON-CRIMINAL (SUBJECT SPECIFIED)","Primary Type"]="NON-CRIMINAL"
 
 sliced.loc[sliced["Primary Type"] == "OTHER NARCOTIC VIOLATION","Primary Type"]="NARCOTICS"
+
+#TOP10
+sliced["Top10"]= sliced["Primary Type"]
+
+sliced.loc[sliced["Primary Type"] == "DOMESTIC VIOLENCE","Top10"]="Other"
+sliced.loc[sliced["Primary Type"] == "RITUALISM","Top10"]="Other"
+sliced.loc[sliced["Primary Type"] == "HUMAN TRAFFICKING","Top10"]="Other"
+sliced.loc[sliced["Primary Type"] == "PUBLIC INDECENCY","Top10"]="Other"
+sliced.loc[sliced["Primary Type"] == "CONCEALED CARRY LICENSE VIOLATION","Top10"]="Other"
+sliced.loc[sliced["Primary Type"] == "NON-CRIMINAL","Top10"]="Other"
+sliced.loc[sliced["Primary Type"] == "OBSCENITY","Top10"]="Other"
+
+sliced["Top10"].value_counts()
 
 
 #########################################################################
