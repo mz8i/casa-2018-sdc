@@ -11,9 +11,14 @@ import pandas as pd
 import numpy as np
 import pylab
 
+import os
+
+analysis_dir = os.path.dirname(__file__)
+data_dir = os.path.join(analysis_dir, 'data')
+
 # IMPORT NECESSARY PACKAGES
 # IMPORT DATA
-data = pd.read_csv("D:/Dropbox/Cloud - Master's - Docs/Spatial Data Capture, Storage and Analysis/Data Project/City-Crime/Crimes_-_2001_to_present.csv")
+data = pd.read_csv(os.path.join(data_dir, "Crimes_-_2001_to_present.csv"))
 
 data.head
 
@@ -59,7 +64,7 @@ sliced_2017=sliced[sliced.Year == 2017]
 #THEFT#####################################################################
 sliced_Theft2017=sliced_2017[sliced_2017["Primary Type"] == "THEFT"]
 spatial_Theft2017=sliced_Theft2017[sliced_Theft2017.Latitude.notnull()]
-spatial_Theft2017.to_csv("D:/Dropbox/Cloud - Master's - Docs/Spatial Data Capture, Storage and Analysis/Data Project/City-Crime/export_spatial_theft_2017.csv")
+spatial_Theft2017.to_csv(os.path.join(data_dir, "export_spatial_theft_2017.csv"))
 ##########################################################################
 
 sliced_23=sliced[sliced.Hour != 0]
