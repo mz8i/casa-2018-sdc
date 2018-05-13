@@ -201,3 +201,95 @@ sns.heatmap(sliced_new29.pivot("Hour", "tesdate", "Count"), annot=False, cmap="B
 ########################################################################
 #sns_plot.savefig("output1.png")
 
+list(sliced)
+sliced['FBI Code'].value_counts()
+
+#Dictionary for FBI codes
+dictionary_FBI={
+    '01A':'01A Homicide 1st & 2nd Degree',
+    '02':'02 Criminal Sexual Assault',
+    '03':'03 Robbery',
+    '04A':'04A Aggravated Assault',
+    '04B':'04B Aggravated Battery',
+    '05':'05 Burglary',
+    '06':'06 Larceny',
+    '07':'07 Motor Vehicle Theft',
+    '09':'09 Arson',
+    '01B':'01B Involuntary Manslaughter',
+    '08A':'08A Simple Assault',
+    '08B':'08B Simple Battery',
+    '10':'10 Forgery & Counterfeiting',
+    '11':'11 Fraud',
+    '12':'12 Embezzlement',
+    '13':'13 Stolen Property',
+    '14':'14 Vandalism',
+    '15':'15 Weapons Violation',
+    '16':'16 Prostitution ',
+    '17':'17 Criminal Sexual Abuse',
+    '18':'18 Drug Abuse',
+    '19':'19 Gambling',
+    '20':'20 Offenses Against Family',
+    '22':'22 Liquor License',
+    '24':'24 Disorderly Conduct',
+    '26':'26 Misc Non-Index Offense'
+}
+
+#Dictionary for whom the crime was against
+dictionary_against={
+    '01A':'Persons',
+    '02':'Persons',
+    '03':'Property',
+    '04A':'Persons',
+    '04B':'Persons',
+    '05':'Property',
+    '06':'Property',
+    '07':'Property',
+    '09':'Property',
+    '01B':'Persons',
+    '08A':'Persons',
+    '08B':'Persons',
+    '10':'Property',
+    '11':'Property',
+    '12':'Property',
+    '13':'Property',
+    '14':'Property',
+    '15':'Society',
+    '16':'Society',
+    '17':'Persons',
+    '18':'Society',
+    '19':'Society',
+    '20':'Persons',
+    '22':'Society',
+    '24':'Society',
+    '26':'Society'
+}
+
+#Dcitionary severity according to FBI code
+dictionary_severity={
+'01A':'More serious',
+'02':'More serious',
+'03':'More serious',
+'04A':'More serious',
+'04B':'More serious',
+'05':'More serious',
+'06':'More serious',
+'07':'More serious',
+'09':'More serious',
+'01B':'Less Serious',
+'08A':'Less Serious',
+'08B':'Less Serious',
+'10':'Less Serious',
+'11':'Less Serious',
+'12':'Less Serious',
+'13':'Less Serious',
+'14':'Less Serious',
+'15':'Less Serious',
+'16':'Less Serious',
+'17':'Less Serious',
+'18':'Less Serious',
+'19':'Less Serious',
+'20':'Less Serious',
+'22':'Less Serious',
+'24':'Less Serious',
+'26':'Less Serious'
+}
