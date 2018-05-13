@@ -4,7 +4,7 @@ Created on Fri May 11 11:33:18 2018
 
 @author: julian
 """
-
+#hola
 # library
 import seaborn as sns
 import pandas as pd
@@ -70,25 +70,25 @@ spatial_Theft2017.to_csv(os.path.join(data_dir, "export_spatial_theft_2017.csv")
 sliced_23=sliced[sliced.Hour != 0]
 sliced_0223=sliced_23[sliced_23.Day != 1]
 
-#PIE PLOT
+#PIE PLOT###############################################################"
 sliced_2015["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 sliced_2016["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 sliced_2017["Primary Type"].value_counts().plot(kind="pie",autopct="%.2f")
 
-
+#Exported CSV per year
 export_2016=sliced[sliced.Year == 2016]
 export_2017=sliced[sliced.Year == 2017]
-
 
 #export_2016.to_csv("D:/Dropbox/Cloud - Master's - Docs/Spatial Data Capture, Storage and Analysis/Data Project/City-Crime/export_2016.csv")
 
 #export_2017.to_csv("D:/Dropbox/Cloud - Master's - Docs/Spatial Data Capture, Storage and Analysis/Data Project/City-Crime/export_2017.csv")
 
-sliced["Primary Type"].value_counts()
 
-#CLEANING
+
+#CLEANING################################################################ ;
 #RENAMING
 
+sliced["Primary Type"].value_counts()
 sliced.loc[sliced["Primary Type"] == "NON - CRIMINAL","Primary Type"]="NON-CRIMINAL"
 sliced.loc[sliced["Primary Type"] == "NON-CRIMINAL (SUBJECT SPECIFIED)","Primary Type"]="NON-CRIMINAL"
 
@@ -97,9 +97,8 @@ sliced.loc[sliced["Primary Type"] == "OTHER NARCOTIC VIOLATION","Primary Type"]=
 
 #########################################################################
 
-#SPATIAL DATA
+#SPATIAL DATA SUBSET
 spatial_crime=sliced[sliced.Latitude.notnull()]
-
 
 # let's put more analysis here
 
@@ -110,13 +109,13 @@ spatial_crime=sliced[sliced.Latitude.notnull()]
 
 
 
-###################################################################
-# Getting unique values after grouping by hour and MONTH
+#HEATMAP##################################################################
+# Getting unique values after grouping by HOUR and MONTH
 sliced_new = sliced[sliced["Month"] >= 1].groupby(["Hour", "Month"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
 sliced_new = sliced_new.reset_index(name="Count")
 
-#Dictionary
+#Dictionary To get right day numbers
 days_in_month={
         1:31,
         2:28,
@@ -141,7 +140,7 @@ sns.heatmap(sliced_new.pivot("Hour", "Month", "CountN"), annot=False, cmap="BuPu
 
 
 
-###################################################################
+#HEATMAP##################################################################
 # Getting unique values after grouping by hour and DAY FOR 2016
 sliced_new16 = sliced_2016[sliced_2016["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
@@ -167,7 +166,7 @@ sns.heatmap(sliced_newY.pivot("Month", "Year", "CountN"), annot=False, cmap="BuP
 
 
 
-###################################################################
+#HEATMAP##################################################################
 # Getting unique values after grouping by hour and DAY FOR 2017
 sliced_new17 = sliced_2017[sliced_2017["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
@@ -177,7 +176,7 @@ sns.heatmap(sliced_new17.pivot("Hour", "tesdate", "Count"), annot=False, cmap="B
 ####################################################################
 
 
-###################################################################
+#HEATMAP##################################################################
 # Getting unique values after grouping by hour and DAY 
 sliced_newM = sliced[sliced["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
@@ -186,8 +185,7 @@ sliced_newM = sliced.reset_index(name="Count")
 sns.heatmap(sliced_newM.pivot("Hour", "tesdate", "Count"), annot=False, cmap="BuPu")
 ####################################################################
 
-###################################################################
-
+#HEATMAP##################################################################
 # Getting unique values after grouping by hour and DAY no hour 0
 sliced_new23 = sliced_23[sliced_2017["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
@@ -196,8 +194,7 @@ sliced_new23 = sliced_new23.reset_index(name="Count")
 sns.heatmap(sliced_new23.pivot("Hour", "tesdate", "Count"), annot=False, cmap="BuPu")
 ####################################################################
 
-###################################################################
-
+#HEATMAP##################################################################
 # Getting unique values after grouping by hour and DAY no hour 0
 sliced_new0223 = sliced_0223[sliced_0223["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
@@ -207,6 +204,3 @@ sns.heatmap(sliced_new0223.pivot("Hour", "tesdate", "Count"), annot=False, cmap=
 ####################################################################
 #sns_plot.savefig("output1.png")
 
-#pylab.savefig('foo.png')
-
-sliced_0223
