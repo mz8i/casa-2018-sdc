@@ -13,7 +13,8 @@ import pylab
 
 import os
 
-analysis_dir = os.path.dirname(__file__)
+
+analysis_dir = os.getcwd()
 data_dir = os.path.join(analysis_dir, 'data')
 
 # IMPORT NECESSARY PACKAGES
