@@ -226,7 +226,7 @@ sliced_newC2017 = sliced_2017[sliced_2017["Month"] >= 1].groupby(["Hour", "Top10
 sliced_newC2017 = sliced_newC2017.reset_index(name="Count")
 sliced_newC2017["Sum"]=sliced_newC2017["Count"]/sliced_newC2017.groupby("Top10")["Count"].transform(np.sum)
 #Plot the Heatmap
-heatcat=sns.heatmap(sliced_newC2017.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu")
+heatcat=sns.heatmap(sliced_newC2017.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
 plt.xticks(rotation=45)
 ####################################################################
 
@@ -461,6 +461,12 @@ sliced_2017['FBI Type']=sliced_2017['FBI Code'].map(dictionary_FBI)
 sliced_2017.loc[:,'FBI Against']=sliced_2017.loc[:,'FBI Code'].map(dictionary_against)
 sliced_2017['FBI Severity']=sliced_2017['FBI Code'].map(dictionary_severity)
 
+#Create 3 new columns in 'sliced' dataset
+#I got some warnings, but it worked
+sliced['FBI Type']=sliced['FBI Code'].map(dictionary_FBI)
+sliced.loc[:,'FBI Against']=sliced.loc[:,'FBI Code'].map(dictionary_against)
+sliced['FBI Severity']=sliced['FBI Code'].map(dictionary_severity)
+
 #cross tables
 #NOTE: FIRST YOU NEED TO RUN 'ca.py'
 #FBI Type vs Location Description
@@ -480,3 +486,26 @@ ca_Arrest.scree_diagram()
 #FBI Type vs time of the day (in bins)
 #still working on it
 
+#HEATMAP by CATEGORY 2017 new cat ######################################################
+#sliced_2017=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newC2017 = sliced_2017[sliced_2017["FBI Type"] != "01B Involuntary Manslaughter"].groupby(["Hour", "FBI Type"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newC2017 = sliced_newC2017.reset_index(name="Count")
+sliced_newC2017["Sum"]=sliced_newC2017["Count"]/sliced_newC2017.groupby("FBI Type")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newC2017.pivot("FBI Type","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+plt.xticks(rotation=45)
+####################################################################
+
+#HEATMAP by CATEGORY new cat ######################################################
+#sliced_2017=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newCn = sliced[sliced["FBI Type"] !="12 Embezzlement" ].groupby(["Hour", "FBI Type"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newCn = sliced_newCn.reset_index(name="Count")
+sliced_newCn["Sum"]=sliced_newCn["Count"]/sliced_newCn.groupby("FBI Type")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newCn.pivot("FBI Type","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+plt.xticks(rotation=45)
+####################################################################
