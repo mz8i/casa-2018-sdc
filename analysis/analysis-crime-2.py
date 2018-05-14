@@ -262,9 +262,9 @@ sns.heatmap(sliced_new29.pivot("Hour", "tesdate", "Count"), annot=False, cmap="B
 ########################################################################
 #sns_plot.savefig("output1.png")
 
-list(sliced)
-sliced['FBI Code'].value_counts()
 
+#GROUPING TYPES OF CRIMES###################################
+#First we create 3 dictionaries according to the FBI codes
 #Dictionary for FBI codes
 dictionary_FBI={
     '01A':'01A Homicide 1st & 2nd Degree',
@@ -354,3 +354,29 @@ dictionary_severity={
 '24':'Less Serious',
 '26':'Less Serious'
 }
+
+#Create 3 new columns in 'sliced_2017' dataset
+#I got some warnings, but it worked
+sliced_2017['FBI Type']=sliced_2017['FBI Code'].map(dictionary_FBI)
+sliced_2017.loc[:,'FBI Against']=sliced_2017.loc[:,'FBI Code'].map(dictionary_against)
+sliced_2017['FBI Severity']=sliced_2017['FBI Code'].map(dictionary_severity)
+
+#cross tables
+#NOTE: FIRST YOU NEED TO RUN 'ca.py'
+#FBI Type vs Location Description
+cross_FBITypeVsLoc=pd.crosstab(sliced_2017['FBI Type'],sliced_2017['Location Description'])
+ca_FBI=CA(cross_FBITypeVsLoc)
+ca_FBI.plot()
+ca_FBI.plotText()
+ca_FBI.scree_diagram()
+
+#FBI Type vs FBI Arrest
+cross_FBITypeVsArrest=pd.crosstab(sliced_2017['FBI Type'],sliced_2017['Arrest'])
+ca_Arrest=CA(cross_FBITypeVsArrest)
+ca_Arrest.plot()
+ca_Arrest.plotText()
+ca_Arrest.scree_diagram()
+
+#FBI Type vs time of the day (in bins)
+#still working on it
+
