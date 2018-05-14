@@ -36,7 +36,7 @@ app.get('/crimes/:year/:primarytype', function (req, res) {
                 var year = parseFloat(req.params.year);
 
                 // SQL Statement to run
-                var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude Crimes.Hour, Crimes.Tesdate FROM Crimes WHERE PRIMARY TYPE = "+primarytype+" and YEAR == "+year"";
+                var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude Crimes.Hour, Crimes.Tesdate FROM Crimes WHERE PRIMARY TYPE = "+primarytype+" and YEAR == "+year+"";
                 
                 // Log it on the screen for debugging
                 console.log(sql);
