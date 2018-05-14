@@ -1,3 +1,5 @@
+let webpack = require('webpack');
+
 module.exports = {
     entry: ['./client-src/index.js'],
     output: {
@@ -8,13 +10,18 @@ module.exports = {
         rules: [
             {
                 test: /\.js$/,
-                exclude: /node-modules/,
+                exclude: /node_modules/,
                 use: {
                     loader: 'babel-loader'
                 }
             }
         ]
     },
+    plugins: [
+        new webpack.ProvidePlugin({
+            mapboxgl: 'mapbox-gl'
+        })
+    ],
     stats: {
         colors: true
     },
