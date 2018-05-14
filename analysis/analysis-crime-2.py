@@ -21,7 +21,8 @@ data_dir = os.path.join(analysis_dir, 'data')
 ## IMPORT DATA
 ###Crime
 data = pd.read_csv(os.path.join(data_dir, "Crimes_-_2001_to_present.csv")) 
-###Light
+### DAY Light
+datalight = pd.read_csv(os.path.join(data_dir, "export_sunlight.csv"))
 datasun = pd.read_csv(os.path.join(data_dir, "Night_Day_time1.csv"))
 data.head
 
@@ -41,7 +42,20 @@ sliced["Primary Type"].value_counts()
 
 
 #DAY LIGHT
-pd.to_datetime(datasun['Astr Start'], format="%H:%M")
+#Convert into datetime
+datalight['astronomical_twilight_begin'] =pd.to_datetime(datalight['astronomical_twilight_begin'])
+datalight['astronomical_twilight_end']=pd.to_datetime(datalight['astronomical_twilight_end'])
+
+datalight['civil_twilight_begin']=pd.to_datetime(datalight['civil_twilight_begin'])
+datalight['civil_twilight_end']=pd.to_datetime(datalight['civil_twilight_end'])
+
+datalight['nautical_twilight_begin']=pd.to_datetime(datalight['nautical_twilight_begin'])
+datalight['nautical_twilight_end']=pd.to_datetime(datalight['nautical_twilight_end'])
+
+datalight['solar_noon']=pd.to_datetime(datalight['solar_noon'])
+
+datalight['sunrise'] = pd.to_datetime(datalight['sunrise'])
+datalight['sunset']=pd.to_datetime(datalight['sunset'])
 
 #Read as date data
 date_test = "03/18/2015 07:44:00 PM"
@@ -53,6 +67,8 @@ sliced['Month'] = sliced['RealDate'].dt.month
 
 sliced['Hour'] = sliced['RealDate'].dt.hour
 
+sliced['Minute']=sliced['RealDate'].dt.minute
+
 sliced['Year']=sliced['RealDate'].dt.year
 
 sliced['Crime1'] = 1
@@ -60,11 +76,20 @@ sliced['Crime1'] = 1
 #Histogram
 plt.hist(sliced['Hour'])
 
+#only Hour and minutes
+#sliced['hourmin'] = sliced['Hour'].apply(str).str +"."+ sliced['Minute'].apply(str).str
+
+#sliced['hm'] =  pd.to_datetime(sliced['hourmin'], format="%H:%M")
+
 #only month and day
 sliced['tesdate'] = sliced['Month'].apply(str).str.zfill(2) +"."+ sliced['Day'].apply(str).str.zfill(2)
 
 #only month, month and year
-sliced['testdateyear'] = sliced['Month'].apply(str).str.zfill(2) +"."+ sliced['Day'].apply(str).str.zfill(2)+"."+sliced['Year'].apply(str).str.zfill(2)
+sliced['testdateyear'] = sliced['Year'].apply(str).str.zfill(2)+"."+sliced['Month'].apply(str).str.zfill(2) +"."+ sliced['Day'].apply(str).str.zfill(2)
+
+datalight['testdateyear'] = 0
+datalight['testdateyear'] = datalight['sunset'].dt.year.apply(str).str.zfill(2)+ "."+ datalight['sunset'].dt.month.apply(str).str.zfill(2) +"."+ datalight['sunset'].dt.day.apply(str).str.zfill(2)
+
 #transform into datetime
 sliced['MD'] =  pd.to_datetime(sliced['testdateyear'], format="%m.%d.%Y")
 
@@ -86,6 +111,30 @@ sliced_2014=sliced[sliced.Year == 2014]
 sliced_2015=sliced[sliced.Year == 2015]
 sliced_2016=sliced[sliced.Year == 2016]
 sliced_2017=sliced[sliced.Year == 2017]
+
+
+#ADD DAYLIGHT COLUMN########################################################
+sliced_2017['Daylight']="A"
+
+
+#2017 WITH LIGHT
+sliced_2017_light=sliced_2017.merge(datalight, on='testdateyear', how='left')
+
+#ALL YEARS WITH LIGHT
+sliced_light=sliced.merge(datalight, on='testdateyear', how='left')
+
+datalight['testdateyear'].dtype
+sliced_2017['testdateyear'].dtype
+
+#FILL DAYLIGHT COLUMN
+sliced_2017['Daylight'] = sliced_2017['Daylight'].where(datalight['sunrise'].dt.hour == sliced_2017["RealDate"].dt.hour, "d")
+
+
+
+
+
+
+
 
 #THEFT SUBSET ###########################################################
 sliced_Theft2017=sliced_2017[sliced_2017["Primary Type"] == "THEFT"]
@@ -136,8 +185,10 @@ sliced_newTime = sliced[sliced["Month"] >= 1].groupby(["Crime1", "MD"])["Crime1"
 # Pivot the dataframe to create a [hour x date] matrix containing counts
 sliced_newTime = sliced_newTime.reset_index(name="Count")
 plt.plot(sliced_newTime["MD"], sliced_newTime['Count'])
+########################################################################
 
-#TOP10 Crimes :P
+
+#TOP10 Crimes ##########################################################
 sliced["Top10"]= sliced["Primary Type"]
 
 sliced.loc[sliced["Primary Type"] == "DOMESTIC VIOLENCE","Top10"]="Other"
