@@ -117,19 +117,17 @@ sliced_2017=sliced[sliced.Year == 2017]
 sliced_2017['Daylight']="A"
 
 
-#2017 WITH LIGHT
-sliced_2017_light=sliced_2017.merge(datalight, on='testdateyear', how='left')
+
 
 #ALL YEARS WITH LIGHT
 sliced_light=sliced.merge(datalight, on='testdateyear', how='left')
 
-datalight['testdateyear'].dtype
-sliced_2017['testdateyear'].dtype
-
-#FILL DAYLIGHT COLUMN
-sliced_2017['Daylight'] = sliced_2017['Daylight'].where(datalight['sunrise'].dt.hour == sliced_2017["RealDate"].dt.hour, "d")
+#2017 WITH LIGHT
+sliced_2017_light=sliced_light[sliced_light.Year == 2017]
 
 
+#Day and Night
+sliced_light['daylight']= np.where((sliced_light['sunrise'] <= sliced_light['RealDate']) & (sliced_light['RealDate']< sliced_light['sunset']), "Day", "Night")
 
 
 
@@ -249,8 +247,13 @@ sliced_new['Month'].map(days_in_month)
 sliced_new['CountN']=sliced_new['Count']/sliced_new['Month'].map(days_in_month)
 
 #Plot the Heatmap
-sns.heatmap(sliced_new.pivot("Hour", "Month", "CountN"), annot=False, cmap="BuPu")
+heatmonth=sns.heatmap(sliced_new.pivot("Hour", "Month", "CountN"), annot=False, cmap="BuPu")
+
+heatmonth.invert_yaxis()
 ####################################################################
+
+
+
 
 
 #HEATMAP by DAY 2016################################################
