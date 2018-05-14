@@ -91,7 +91,7 @@ datalight['testdateyear'] = 0
 datalight['testdateyear'] = datalight['sunset'].dt.year.apply(str).str.zfill(2)+ "."+ datalight['sunset'].dt.month.apply(str).str.zfill(2) +"."+ datalight['sunset'].dt.day.apply(str).str.zfill(2)
 
 #transform into datetime
-sliced['MD'] =  pd.to_datetime(sliced['testdateyear'], format="%m.%d.%Y")
+sliced['MD'] =  pd.to_datetime(sliced['testdateyear'], format="%Y.%m.%d")
 
 #Subsetting for Each year
 sliced_2001=sliced[sliced.Year == 2001]
@@ -214,9 +214,22 @@ sliced_newC = sliced[sliced["Month"] >= 1].groupby(["Hour", "Top10"])["Crime1"].
 sliced_newC = sliced_newC.reset_index(name="Count")
 sliced_newC["Sum"]=sliced_newC["Count"]/sliced_newC.groupby("Top10")["Count"].transform(np.sum)
 #Plot the Heatmap
-heatcat=sns.heatmap(sliced_newC.pivot("Top10","Hour", "Sum"), annot=False, cmap="BuPu")
+heatcat=sns.heatmap(sliced_newC.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
 plt.xticks(rotation=45)
 ####################################################################
+
+#HEATMAP by CATEGORY 2017######################################################
+sliced_2017=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newC2017 = sliced_2017[sliced_2017["Month"] >= 1].groupby(["Hour", "Top10"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newC2017 = sliced_newC2017.reset_index(name="Count")
+sliced_newC2017["Sum"]=sliced_newC2017["Count"]/sliced_newC2017.groupby("Top10")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newC2017.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu")
+plt.xticks(rotation=45)
+####################################################################
+
 
 
 
@@ -251,6 +264,39 @@ heatmonth=sns.heatmap(sliced_new.pivot("Hour", "Month", "CountN"), annot=False, 
 
 heatmonth.invert_yaxis()
 ####################################################################
+
+
+#HEATMAP by Hour and Month 2017############################################
+# Getting unique values after grouping by HOUR and MONTH
+sliced_new2017m = sliced_2017[sliced_2017["Month"] >= 1].groupby(["Hour", "Month"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_new2017m = sliced_new2017m.reset_index(name="Count")
+
+#Dictionary To get right day numbers (select all lines and run)
+days_in_month={
+        1:31,
+        2:28,
+        3:31,
+        4:30,
+        5:31,
+        6:30,
+        7:31,
+        8:31,
+        9:30,
+        10:31,
+        11:30,
+        12:31
+}
+
+sliced_new2017m['Month'].map(days_in_month)
+sliced_new2017m['CountN']=sliced_new2017m['Count']/sliced_new2017m['Month'].map(days_in_month)
+
+#Plot the Heatmap
+heatmonth2017=sns.heatmap(sliced_new2017m.pivot("Hour", "Month", "CountN"), annot=False, cmap="BuPu")
+
+heatmonth.invert_yaxis()
+####################################################################
+
 
 
 
