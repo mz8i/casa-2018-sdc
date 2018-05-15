@@ -37,8 +37,8 @@ api.get('/crimes/:year/:primarytype', function (req, res) {
                 var primarytype = req.params.primarytype;
 
                 // SQL Statement to run
-                var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude Crimes.Hour, Crimes.Tesdate FROM Crimes WHERE PRIMARY_TYPE = "+connection.escape(primarytype)+" and YEAR == "+year+"";
-                
+              var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude, Crimes.Date FROM Crimes WHERE PrimaryType = "+connection.escape(primarytype)+" and YEAR = "+year+"";
+              
                 // Log it on the screen for debugging
                 console.log(sql);
 
