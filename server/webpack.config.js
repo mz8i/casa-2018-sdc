@@ -1,4 +1,5 @@
-let webpack = require('webpack');
+var webpack = require('webpack');
+var VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
     entry: ['./client-src/index.js'],
@@ -14,13 +15,25 @@ module.exports = {
                 use: {
                     loader: 'babel-loader'
                 }
+            },
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader'
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    'vue-style-loader',
+                    'css-loader'
+                ]
             }
         ]
     },
     plugins: [
         new webpack.ProvidePlugin({
             mapboxgl: 'mapbox-gl'
-        })
+        }),
+        new VueLoaderPlugin()
     ],
     stats: {
         colors: true

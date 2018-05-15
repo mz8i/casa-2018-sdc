@@ -1,14 +1,35 @@
-import * as d3 from 'd3';
-import mapboxgl from 'mapbox-gl';
+// import * as d3 from 'd3';
+import Vue from 'vue';
+import VueRouter from 'vue-router';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoibXo4aSIsImEiOiJjamg0d2pxcDMxNXFzMnFwdG52aG81cTc5In0.CksGFWg2x0MiWRShMnYsxQ';
+import App from './components/App.vue';
+import IntroScreen from './components/IntroScreen.vue';
+import OverviewScreen from './components/OverviewScreen.vue';
 
-const map = new mapboxgl.Map({
-    container: 'map', // container element id
-    style: 'mapbox://styles/mz8i/cjh51i78x2p2e2squotdvm06f',
-    center: [-87.6297982, 41.8781136], // initial map center in [lon, lat]
-    zoom: 12
+Vue.use(VueRouter);
+
+const router = new VueRouter({
+    routes: [
+        { path: '/intro', component: IntroScreen},
+        { path: '/overview', component: OverviewScreen}
+    ]
 });
+
+let vm = new Vue({
+    router,
+    render: function(createElem) { return createElem(App)}
+}).$mount("#app-container");
+
+router.replace('overview');
+
+// const map = new mapboxgl.Map({
+//     container: 'map', // container element id
+//     style: 'mapbox://styles/mz8i/cjh51i78x2p2e2squotdvm06f',
+//     center: [-87.6297982, 41.8781136], // initial map center in [lon, lat]
+//     zoom: 12
+// });
+
+
 
 // // The 'building' layer in the mapbox-streets vector source contains building-height
 // // data from OpenStreetMap.
