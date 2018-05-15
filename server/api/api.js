@@ -24,7 +24,7 @@ api.get('/crimes', function(req, res, next){
 
 
 //  API EndPoint to get data from a specific type and year
-app.get('/crimes/:year/:primarytype', function (req, res) {
+api.get('/crimes/:year/:primarytype', function (req, res) {
 
       // Alows data to be downloaded from the server with security concerns
       res.header("Access-Control-Allow-Origin", "*");
@@ -34,9 +34,10 @@ app.get('/crimes/:year/:primarytype', function (req, res) {
                
                 // Parse the values from the URL into numbers for the query
                 var year = parseFloat(req.params.year);
+                var primarytype = req.params.primarytype;
 
                 // SQL Statement to run
-                var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude Crimes.Hour, Crimes.Tesdate FROM Crimes WHERE PRIMARY TYPE = "+primarytype+" and YEAR == "+year+"";
+                var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude Crimes.Hour, Crimes.Tesdate FROM Crimes WHERE PRIMARY_TYPE = "+connection.escape(primarytype)+" and YEAR == "+year+"";
                 
                 // Log it on the screen for debugging
                 console.log(sql);
