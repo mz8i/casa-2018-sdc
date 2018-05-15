@@ -91,7 +91,7 @@ datalight['testdateyear'] = 0
 datalight['testdateyear'] = datalight['sunset'].dt.year.apply(str).str.zfill(2)+ "."+ datalight['sunset'].dt.month.apply(str).str.zfill(2) +"."+ datalight['sunset'].dt.day.apply(str).str.zfill(2)
 
 #transform into datetime
-sliced['MD'] =  pd.to_datetime(sliced['testdateyear'], format="%m.%d.%Y")
+sliced['MD'] =  pd.to_datetime(sliced['testdateyear'], format="%Y.%m.%d")
 
 #Subsetting for Each year
 sliced_2001=sliced[sliced.Year == 2001]
@@ -214,9 +214,22 @@ sliced_newC = sliced[sliced["Month"] >= 1].groupby(["Hour", "Top10"])["Crime1"].
 sliced_newC = sliced_newC.reset_index(name="Count")
 sliced_newC["Sum"]=sliced_newC["Count"]/sliced_newC.groupby("Top10")["Count"].transform(np.sum)
 #Plot the Heatmap
-heatcat=sns.heatmap(sliced_newC.pivot("Top10","Hour", "Sum"), annot=False, cmap="BuPu")
+heatcat=sns.heatmap(sliced_newC.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
 plt.xticks(rotation=45)
 ####################################################################
+
+#HEATMAP by CATEGORY 2017######################################################
+sliced_2017=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newC2017 = sliced_2017[sliced_2017["Month"] >= 1].groupby(["Hour", "Top10"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newC2017 = sliced_newC2017.reset_index(name="Count")
+sliced_newC2017["Sum"]=sliced_newC2017["Count"]/sliced_newC2017.groupby("Top10")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newC2017.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+plt.xticks(rotation=45)
+####################################################################
+
 
 
 
@@ -251,6 +264,39 @@ heatmonth=sns.heatmap(sliced_new.pivot("Hour", "Month", "CountN"), annot=False, 
 
 heatmonth.invert_yaxis()
 ####################################################################
+
+
+#HEATMAP by Hour and Month 2017############################################
+# Getting unique values after grouping by HOUR and MONTH
+sliced_new2017m = sliced_2017[sliced_2017["Month"] >= 1].groupby(["Hour", "Month"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_new2017m = sliced_new2017m.reset_index(name="Count")
+
+#Dictionary To get right day numbers (select all lines and run)
+days_in_month={
+        1:31,
+        2:28,
+        3:31,
+        4:30,
+        5:31,
+        6:30,
+        7:31,
+        8:31,
+        9:30,
+        10:31,
+        11:30,
+        12:31
+}
+
+sliced_new2017m['Month'].map(days_in_month)
+sliced_new2017m['CountN']=sliced_new2017m['Count']/sliced_new2017m['Month'].map(days_in_month)
+
+#Plot the Heatmap
+heatmonth2017=sns.heatmap(sliced_new2017m.pivot("Hour", "Month", "CountN"), annot=False, cmap="BuPu")
+
+heatmonth.invert_yaxis()
+####################################################################
+
 
 
 
@@ -316,3 +362,150 @@ sns.heatmap(sliced_new29.pivot("Hour", "tesdate", "Count"), annot=False, cmap="B
 ########################################################################
 #sns_plot.savefig("output1.png")
 
+
+#GROUPING TYPES OF CRIMES###################################
+#First we create 3 dictionaries according to the FBI codes
+#Dictionary for FBI codes
+dictionary_FBI={
+    '01A':'01A Homicide 1st & 2nd Degree',
+    '02':'02 Criminal Sexual Assault',
+    '03':'03 Robbery',
+    '04A':'04A Aggravated Assault',
+    '04B':'04B Aggravated Battery',
+    '05':'05 Burglary',
+    '06':'06 Larceny',
+    '07':'07 Motor Vehicle Theft',
+    '09':'09 Arson',
+    '01B':'01B Involuntary Manslaughter',
+    '08A':'08A Simple Assault',
+    '08B':'08B Simple Battery',
+    '10':'10 Forgery & Counterfeiting',
+    '11':'11 Fraud',
+    '12':'12 Embezzlement',
+    '13':'13 Stolen Property',
+    '14':'14 Vandalism',
+    '15':'15 Weapons Violation',
+    '16':'16 Prostitution ',
+    '17':'17 Criminal Sexual Abuse',
+    '18':'18 Drug Abuse',
+    '19':'19 Gambling',
+    '20':'20 Offenses Against Family',
+    '22':'22 Liquor License',
+    '24':'24 Disorderly Conduct',
+    '26':'26 Misc Non-Index Offense'
+}
+
+#Dictionary for whom the crime was against
+dictionary_against={
+    '01A':'Persons',
+    '02':'Persons',
+    '03':'Property',
+    '04A':'Persons',
+    '04B':'Persons',
+    '05':'Property',
+    '06':'Property',
+    '07':'Property',
+    '09':'Property',
+    '01B':'Persons',
+    '08A':'Persons',
+    '08B':'Persons',
+    '10':'Property',
+    '11':'Property',
+    '12':'Property',
+    '13':'Property',
+    '14':'Property',
+    '15':'Society',
+    '16':'Society',
+    '17':'Persons',
+    '18':'Society',
+    '19':'Society',
+    '20':'Persons',
+    '22':'Society',
+    '24':'Society',
+    '26':'Society'
+}
+
+#Dcitionary severity according to FBI code
+dictionary_severity={
+'01A':'More serious',
+'02':'More serious',
+'03':'More serious',
+'04A':'More serious',
+'04B':'More serious',
+'05':'More serious',
+'06':'More serious',
+'07':'More serious',
+'09':'More serious',
+'01B':'Less Serious',
+'08A':'Less Serious',
+'08B':'Less Serious',
+'10':'Less Serious',
+'11':'Less Serious',
+'12':'Less Serious',
+'13':'Less Serious',
+'14':'Less Serious',
+'15':'Less Serious',
+'16':'Less Serious',
+'17':'Less Serious',
+'18':'Less Serious',
+'19':'Less Serious',
+'20':'Less Serious',
+'22':'Less Serious',
+'24':'Less Serious',
+'26':'Less Serious'
+}
+
+#Create 3 new columns in 'sliced_2017' dataset
+#I got some warnings, but it worked
+sliced_2017['FBI Type']=sliced_2017['FBI Code'].map(dictionary_FBI)
+sliced_2017.loc[:,'FBI Against']=sliced_2017.loc[:,'FBI Code'].map(dictionary_against)
+sliced_2017['FBI Severity']=sliced_2017['FBI Code'].map(dictionary_severity)
+
+#Create 3 new columns in 'sliced' dataset
+#I got some warnings, but it worked
+sliced['FBI Type']=sliced['FBI Code'].map(dictionary_FBI)
+sliced.loc[:,'FBI Against']=sliced.loc[:,'FBI Code'].map(dictionary_against)
+sliced['FBI Severity']=sliced['FBI Code'].map(dictionary_severity)
+
+#cross tables
+#NOTE: FIRST YOU NEED TO RUN 'ca.py'
+#FBI Type vs Location Description
+cross_FBITypeVsLoc=pd.crosstab(sliced_2017['FBI Type'],sliced_2017['Location Description'])
+ca_FBI=CA(cross_FBITypeVsLoc)
+ca_FBI.plot()
+ca_FBI.plotText()
+ca_FBI.scree_diagram()
+
+#FBI Type vs FBI Arrest
+cross_FBITypeVsArrest=pd.crosstab(sliced_2017['FBI Type'],sliced_2017['Arrest'])
+ca_Arrest=CA(cross_FBITypeVsArrest)
+ca_Arrest.plot()
+ca_Arrest.plotText()
+ca_Arrest.scree_diagram()
+
+#FBI Type vs time of the day (in bins)
+#still working on it
+
+#HEATMAP by CATEGORY 2017 new cat ######################################################
+#sliced_2017=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newC2017 = sliced_2017[sliced_2017["FBI Type"] != "01B Involuntary Manslaughter"].groupby(["Hour", "FBI Type"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newC2017 = sliced_newC2017.reset_index(name="Count")
+sliced_newC2017["Sum"]=sliced_newC2017["Count"]/sliced_newC2017.groupby("FBI Type")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newC2017.pivot("FBI Type","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+plt.xticks(rotation=45)
+####################################################################
+
+#HEATMAP by CATEGORY new cat ######################################################
+#sliced_2017=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newCn = sliced[sliced["FBI Type"] !="12 Embezzlement" ].groupby(["Hour", "FBI Type"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newCn = sliced_newCn.reset_index(name="Count")
+sliced_newCn["Sum"]=sliced_newCn["Count"]/sliced_newCn.groupby("FBI Type")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newCn.pivot("FBI Type","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+plt.xticks(rotation=45)
+####################################################################
