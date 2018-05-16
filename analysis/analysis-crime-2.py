@@ -29,8 +29,11 @@ data.head
 #CLEANING################################################################
 ########################RENAMING and grouping
 
+
+#Run this line even if you don't want to subset the data
 # iloc[row slicing, column slicing]
 sliced=data.iloc[:, :]
+
 from matplotlib import pyplot as plt
 
 sliced["Primary Type"].value_counts()
@@ -222,7 +225,7 @@ sliced_2015=sliced[sliced.Year == 2015]
 sliced_2016=sliced[sliced.Year == 2016]
 sliced_2017=sliced[sliced.Year == 2017]
 
-
+sliced_2017["Location Description"].value_counts()
 
 #ADD DAYLIGHT COLUMN########################################################
 sliced_2017['Daylight']="A"
@@ -566,10 +569,19 @@ plt.xticks(rotation=45)
 #Create data frame per category
 
 #Homicide Monthly
-sliced_01A = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree']
-sliced_01A = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree'].groupby(["Year", "Month"])["Crime1"].size()
+sliced_01A = sliced_2017[sliced_2017['FBI Type'] == '01A Homicide 1st & 2nd Degree']
+sliced_01A = sliced_2017[sliced_2017['FBI Type'] == '01A Homicide 1st & 2nd Degree'].groupby(["Year", "Month"])["Crime1"].size()
 sliced_01A = sliced_01A.reset_index(name="Count")
+
 #Scatterr Plot
+
+#add binary variable by severity
+sliced_2017["Severity"] = np.where((sliced_2017["FBI Severity"]== "Less Serious"),1,0)
+
+plt.scatter(sliced_2017["Longitude"], sliced_2017['Latitude'],c=sliced_2017['Severity'], s=0.001, alpha=0.5, cmap='RdYlGn')
+plt.colorbar()
+
+
 plt.scatter(sliced_01A["Month"], sliced_01A['Count'])
 
 #scatter test
@@ -588,18 +600,17 @@ plt.scatter(sliced_01AH["Hour"], sliced_01AH['Count'],)
 
 
 #Criminal Sexual Assault
-sliced_02 = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault']
-sliced_02 = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault'].groupby(["Year", "Month"])["Crime1"].size()
+sliced_02 = sliced_2017[sliced_2017['FBI Type'] == '02 Criminal Sexual Assault']
+sliced_02 = sliced_2017[sliced_2017['FBI Type'] == '02 Criminal Sexual Assault'].groupby(["Year", "Month"])["Crime1"].size()
 sliced_02 = sliced_02.reset_index(name="Count")
 #Scatter Plot Criminal
 plt.scatter(sliced_02["Month"], sliced_02['Count'])
 
-sliced_02H = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault']
-sliced_02H = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault'].groupby(["Hour", "Year"])["Crime1"].size()
+sliced_02H = sliced_2017[sliced_2017['FBI Type'] == '02 Criminal Sexual Assault']
+sliced_02H = sliced_2017[sliced_2017['FBI Type'] == '02 Criminal Sexual Assault'].groupby(["Year", "Hour"])["Crime1"].size()
 sliced_02H = sliced_02H.reset_index(name="Count")
 #Scatter Plot Criminal Sexual Assault
 plt.scatter(sliced_02["Hour"], sliced_02['Count'])
-
 
 #Robbery
 sliced_03 = sliced[sliced['FBI Type'] == '03 Robbery'].groupby(["Year", "Month"])["Crime1"].size()
@@ -608,35 +619,8 @@ sliced_03 = sliced_03.reset_index(name="Count")
 plt.scatter(sliced_03["Month"], sliced_03['Count'])
 
 
-
-#'01A':'01A Homicide 1st & 2nd Degree',
-    '02':'02 Criminal Sexual Assault',
-    '03':'03 Robbery',
-    '04A':'04A Aggravated Assault',
-    '04B':'04B Aggravated Battery',
-    '05':'05 Burglary',
-    '06':'06 Larceny',
-    '07':'07 Motor Vehicle Theft',
-    '09':'09 Arson',
-    '01B':'01B Involuntary Manslaughter',
-    '08A':'08A Simple Assault',
-    '08B':'08B Simple Battery',
-    '10':'10 Forgery & Counterfeiting',
-    '11':'11 Fraud',
-    '12':'12 Embezzlement',
-    '13':'13 Stolen Property',
-    '14':'14 Vandalism',
-    '15':'15 Weapons Violation',
-    '16':'16 Prostitution ',
-    '17':'17 Criminal Sexual Abuse',
-    '18':'18 Drug Abuse',
-    '19':'19 Gambling',
-    '20':'20 Offenses Against Family',
-    '22':'22 Liquor License',
-    '24':'24 Disorderly Conduct',
-    '26':'26 Misc Non-Index Offense'
-
-
+#little df for timeseries test
+dtt=pd.DataFrame({"1Month" : sliced_02H["Month"],"CountCassault":sliced_02['Count'], "Homicide":sliced_01A['Count']})
 
 #Importante
 #HEATMAP by CATEGORY new cat ######################################################
