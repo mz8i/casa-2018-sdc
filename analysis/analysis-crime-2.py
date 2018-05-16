@@ -12,7 +12,7 @@ import numpy as np
 import pylab
 
 import os
-
+##Only Julian: os.chdir("D:/Dropbox/Cloud - Master's - Docs\Spatial Data Capture, Storage and Analysis/Data Project/casa-2018-sdc/analysis")
 
 analysis_dir = os.getcwd()
 data_dir = os.path.join(analysis_dir, 'data')
@@ -75,6 +75,8 @@ sliced['Crime1'] = 1
 
 #Histogram
 plt.hist(sliced['Hour'])
+plt.hist(sliced['Month'])
+plt.hist(sliced['Day'])
 
 #only Hour and minutes
 #sliced['hourmin'] = sliced['Hour'].apply(str).str +"."+ sliced['Minute'].apply(str).str
@@ -92,6 +94,114 @@ datalight['testdateyear'] = datalight['sunset'].dt.year.apply(str).str.zfill(2)+
 
 #transform into datetime
 sliced['MD'] =  pd.to_datetime(sliced['testdateyear'], format="%Y.%m.%d")
+
+
+#IMPORTANT
+#GROUPING TYPES OF CRIMES###################################
+#First we create 3 dictionaries according to the FBI codes
+#Dictionary for FBI codes
+dictionary_FBI={
+    '01A':'01A Homicide 1st & 2nd Degree',
+    '02':'02 Criminal Sexual Assault',
+    '03':'03 Robbery',
+    '04A':'04A Aggravated Assault',
+    '04B':'04B Aggravated Battery',
+    '05':'05 Burglary',
+    '06':'06 Larceny',
+    '07':'07 Motor Vehicle Theft',
+    '09':'09 Arson',
+    '01B':'01B Involuntary Manslaughter',
+    '08A':'08A Simple Assault',
+    '08B':'08B Simple Battery',
+    '10':'10 Forgery & Counterfeiting',
+    '11':'11 Fraud',
+    '12':'12 Embezzlement',
+    '13':'13 Stolen Property',
+    '14':'14 Vandalism',
+    '15':'15 Weapons Violation',
+    '16':'16 Prostitution ',
+    '17':'17 Criminal Sexual Abuse',
+    '18':'18 Drug Abuse',
+    '19':'19 Gambling',
+    '20':'20 Offenses Against Family',
+    '22':'22 Liquor License',
+    '24':'24 Disorderly Conduct',
+    '26':'26 Misc Non-Index Offense'
+}
+
+#Dictionary for whom the crime was against
+dictionary_against={
+    '01A':'Persons',
+    '02':'Persons',
+    '03':'Property',
+    '04A':'Persons',
+    '04B':'Persons',
+    '05':'Property',
+    '06':'Property',
+    '07':'Property',
+    '09':'Property',
+    '01B':'Persons',
+    '08A':'Persons',
+    '08B':'Persons',
+    '10':'Property',
+    '11':'Property',
+    '12':'Property',
+    '13':'Property',
+    '14':'Property',
+    '15':'Society',
+    '16':'Society',
+    '17':'Persons',
+    '18':'Society',
+    '19':'Society',
+    '20':'Persons',
+    '22':'Society',
+    '24':'Society',
+    '26':'Society'
+}
+
+#Dcitionary severity according to FBI code
+dictionary_severity={
+'01A':'More serious',
+'02':'More serious',
+'03':'More serious',
+'04A':'More serious',
+'04B':'More serious',
+'05':'More serious',
+'06':'More serious',
+'07':'More serious',
+'09':'More serious',
+'01B':'Less Serious',
+'08A':'Less Serious',
+'08B':'Less Serious',
+'10':'Less Serious',
+'11':'Less Serious',
+'12':'Less Serious',
+'13':'Less Serious',
+'14':'Less Serious',
+'15':'Less Serious',
+'16':'Less Serious',
+'17':'Less Serious',
+'18':'Less Serious',
+'19':'Less Serious',
+'20':'Less Serious',
+'22':'Less Serious',
+'24':'Less Serious',
+'26':'Less Serious'
+}
+
+#IMPORTANT
+#Create 3 new columns in 'sliced_2017' dataset
+#I got some warnings, but it worked
+#sliced_2017['FBI Type']=sliced_2017['FBI Code'].map(dictionary_FBI)
+#sliced_2017.loc[:,'FBI Against']=sliced_2017.loc[:,'FBI Code'].map(dictionary_against)
+#sliced_2017['FBI Severity']=sliced_2017['FBI Code'].map(dictionary_severity)
+
+#IMPORTANT
+#Create 3 new columns in 'sliced' dataset
+#I got some warnings, but it worked
+sliced['FBI Type']=sliced['FBI Code'].map(dictionary_FBI)
+sliced.loc[:,'FBI Against']=sliced.loc[:,'FBI Code'].map(dictionary_against)
+sliced['FBI Severity']=sliced['FBI Code'].map(dictionary_severity)
 
 #Subsetting for Each year
 sliced_2001=sliced[sliced.Year == 2001]
@@ -111,6 +221,7 @@ sliced_2014=sliced[sliced.Year == 2014]
 sliced_2015=sliced[sliced.Year == 2015]
 sliced_2016=sliced[sliced.Year == 2016]
 sliced_2017=sliced[sliced.Year == 2017]
+
 
 
 #ADD DAYLIGHT COLUMN########################################################
@@ -145,7 +256,7 @@ spatial_Theft2017.to_csv(os.path.join(data_dir, "export_spatial_theft_2017.csv")
 sliced_23=sliced[sliced.Hour != 0]
 #and now Remove data from first day of months
 sliced_0223=sliced_23[sliced_23.Day != 1]
-#and now Remove data from 02.29
+#and now Remove data from Feb.29
 sliced_29=sliced_0223[sliced_0223.tesdate != "02.29"]
 
 
@@ -165,6 +276,48 @@ export_2017=sliced[sliced.Year == 2017]
 
 #Category distribution pet year
 sliced["Primary Type"].value_counts()
+
+
+#Total Crime in dataset
+#General
+total_crimes = sliced["Crime1"].value_counts()[1] #6,594,507
+#Severity
+sliced["FBI Severity"].value_counts(1)[1] #40.1% of crimes are "more serious" according to FBI standards
+sliced["FBI Severity"].value_counts(1) #60% of crimes "less serious" 
+
+
+serious_crimes = sliced_light["FBI Severity"].value_counts()[1] # 2,657,064
+less_serious = sliced_light["FBI Severity"].value_counts()[0] #3956462
+
+#Crimes at night: 
+nightcrime = sliced_light["daylight"].value_counts()[0] # Total crimes at night 4,666,700
+sliced_light["daylight"].value_counts(1) #TOTAL: 70,53% of crimes are at Night
+
+# Write 1 if at night and severe
+sliced_light["nightsev"]=np.where((sliced_light["FBI Severity"]=="More serious") & (sliced_light["daylight"]=="Night"),1,0)
+
+#Number of Severe crimes at night 
+seriousNight = sliced_light["nightsev"].value_counts()[1] #1,884,373
+
+#Percentage of crimes at night are serious
+pcrimesSerious = sliced_light["nightsev"].value_counts()[1]/sliced_light["daylight"].value_counts()[0] #40.37% of crimes at night are serious
+
+seriousNightP = seriousNight/serious_crimes #70.91% Of serious are at night,between sunset and sunrise
+
+# Write 1 if at night and not severe
+sliced_light["nightsevless"]=np.where((sliced_light["FBI Severity"]=="Less Serious") & (sliced_light["daylight"]=="Night"),1,0)
+
+#Crime less serious at night
+sliced_light["nightsevless"].value_counts()[1] #2,782,327
+
+
+less_serious_crime = sliced_light["FBI Severity"].value_counts()[0] #3,956,462
+lessNight = sliced_light["nightsevless"].value_counts()[1] #2,782,327
+
+lessNightP =lessNight/less_serious_crime
+
+lessNightP #70.32% at Night is less serious
+
 sliced_2017["Primary Type"].value_counts()
 sliced_2016["Primary Type"].value_counts()
 sliced_2015["Primary Type"].value_counts()
@@ -175,7 +328,7 @@ sliced_2011["Primary Type"].value_counts()
 sliced_2010["Primary Type"].value_counts()
 
 
-
+#########################################################################
 #######PLOT TIME SERIES #################################################
 
  #Getting unique values after grouping by hour and DAY FOR 2016
@@ -184,6 +337,22 @@ sliced_newTime = sliced[sliced["Month"] >= 1].groupby(["Crime1", "MD"])["Crime1"
 sliced_newTime = sliced_newTime.reset_index(name="Count")
 plt.plot(sliced_newTime["MD"], sliced_newTime['Count'])
 ########################################################################
+
+#line chart all crimes over year
+sliced_newTime = sliced[sliced["Year"] >= 2017].groupby(["Crime1", "MD"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newTime = sliced_newTime.reset_index(name="Count")
+plt.plot(sliced_newTime["MD"], sliced_newTime['Count'])
+
+
+#line chart all crimes over year
+sliced_newLine = sliced_2017[sliced_2017["Year"] >= 2017].groupby(["Crime1", "MD"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newLine = sliced_newTime.reset_index(name="Count")
+plt.plot(sliced_newTime["MD"], sliced_newTime['Count'])
+##########################################################################
+##########################################################################
+
 
 
 #TOP10 Crimes ##########################################################
@@ -202,10 +371,11 @@ sliced["Top10"].value_counts()
 sliced["Top10"].value_counts().plot(kind="pie",autopct="%.2f")
 #########################################################################
 
+#########################################################################
 #SPATIAL DATA SUBSET#####################################################
+#Removes Nan from latitude and longitude
 spatial_crime=sliced[sliced.Latitude.notnull()]
 
-# let's put more analysis here
 
 #HEATMAP by CATEGORY ######################################################
 # Getting unique values after grouping by hour and CATEGORY
@@ -217,6 +387,12 @@ sliced_newC["Sum"]=sliced_newC["Count"]/sliced_newC.groupby("Top10")["Count"].tr
 heatcat=sns.heatmap(sliced_newC.pivot("Top10","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
 plt.xticks(rotation=45)
 ####################################################################
+
+#scattermatrix test
+output = pd.scatter_matrix(sliced_newC, alpha=0.2)
+
+sliced_group =sliced_2017[sliced_2017["Month"] >= 1].groupby(["FBI Type"])["Crime1"].size()
+sliced_group = sliced_group.reset_index(name="Count")
 
 #HEATMAP by CATEGORY 2017######################################################
 sliced_2017=sliced[sliced.Year == 2017]
@@ -298,10 +474,6 @@ heatmonth.invert_yaxis()
 ####################################################################
 
 
-
-
-
-
 #HEATMAP by DAY 2016################################################
 # Getting unique values after grouping by hour and DAY FOR 2016
 sliced_new16 = sliced_2016[sliced_2016["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
@@ -333,15 +505,6 @@ sns.heatmap(sliced_new17.pivot("Hour", "tesdate", "Count"), annot=False, cmap="B
 #######################################################################
 
 
-#NOT WORKING -----------------------#HEATMAP BY HOUR AND DAY###############################################
-# Getting unique values after grouping by hour and DAY 
-sliced_newM = sliced[sliced["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
-# Pivot the dataframe to create a [hour x date] matrix containing counts
-sliced_newM = sliced.reset_index(name="Count")
-#Plot the Heatmap
-sns.heatmap(sliced_newM.pivot("Hour", "tesdate", "Count"), annot=False, cmap="BuPu")
-########################################################################
-
 #HEATMAP BY HOUR AND DAY----NO MIDNIGHT ################################
 # Getting unique values after grouping by hour and DAY no hour 0
 sliced_new0223 = sliced_0223[sliced_0223["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
@@ -352,6 +515,7 @@ sns.heatmap(sliced_new0223.pivot("Hour", "tesdate", "Count"), annot=False, cmap=
 ########################################################################
 
 
+#IMPORTANT
 #HEATMAP by HOUR AND DAY ---    NO FEB29 ###############################
 # Getting unique values after grouping by hour and DAY no hour 0 no feb29
 sliced_new29 = sliced_29[sliced_29["Month"] >= 1].groupby(["Hour", "tesdate"])["Crime1"].size()
@@ -363,109 +527,8 @@ sns.heatmap(sliced_new29.pivot("Hour", "tesdate", "Count"), annot=False, cmap="B
 #sns_plot.savefig("output1.png")
 
 
-#GROUPING TYPES OF CRIMES###################################
-#First we create 3 dictionaries according to the FBI codes
-#Dictionary for FBI codes
-dictionary_FBI={
-    '01A':'01A Homicide 1st & 2nd Degree',
-    '02':'02 Criminal Sexual Assault',
-    '03':'03 Robbery',
-    '04A':'04A Aggravated Assault',
-    '04B':'04B Aggravated Battery',
-    '05':'05 Burglary',
-    '06':'06 Larceny',
-    '07':'07 Motor Vehicle Theft',
-    '09':'09 Arson',
-    '01B':'01B Involuntary Manslaughter',
-    '08A':'08A Simple Assault',
-    '08B':'08B Simple Battery',
-    '10':'10 Forgery & Counterfeiting',
-    '11':'11 Fraud',
-    '12':'12 Embezzlement',
-    '13':'13 Stolen Property',
-    '14':'14 Vandalism',
-    '15':'15 Weapons Violation',
-    '16':'16 Prostitution ',
-    '17':'17 Criminal Sexual Abuse',
-    '18':'18 Drug Abuse',
-    '19':'19 Gambling',
-    '20':'20 Offenses Against Family',
-    '22':'22 Liquor License',
-    '24':'24 Disorderly Conduct',
-    '26':'26 Misc Non-Index Offense'
-}
 
-#Dictionary for whom the crime was against
-dictionary_against={
-    '01A':'Persons',
-    '02':'Persons',
-    '03':'Property',
-    '04A':'Persons',
-    '04B':'Persons',
-    '05':'Property',
-    '06':'Property',
-    '07':'Property',
-    '09':'Property',
-    '01B':'Persons',
-    '08A':'Persons',
-    '08B':'Persons',
-    '10':'Property',
-    '11':'Property',
-    '12':'Property',
-    '13':'Property',
-    '14':'Property',
-    '15':'Society',
-    '16':'Society',
-    '17':'Persons',
-    '18':'Society',
-    '19':'Society',
-    '20':'Persons',
-    '22':'Society',
-    '24':'Society',
-    '26':'Society'
-}
 
-#Dcitionary severity according to FBI code
-dictionary_severity={
-'01A':'More serious',
-'02':'More serious',
-'03':'More serious',
-'04A':'More serious',
-'04B':'More serious',
-'05':'More serious',
-'06':'More serious',
-'07':'More serious',
-'09':'More serious',
-'01B':'Less Serious',
-'08A':'Less Serious',
-'08B':'Less Serious',
-'10':'Less Serious',
-'11':'Less Serious',
-'12':'Less Serious',
-'13':'Less Serious',
-'14':'Less Serious',
-'15':'Less Serious',
-'16':'Less Serious',
-'17':'Less Serious',
-'18':'Less Serious',
-'19':'Less Serious',
-'20':'Less Serious',
-'22':'Less Serious',
-'24':'Less Serious',
-'26':'Less Serious'
-}
-
-#Create 3 new columns in 'sliced_2017' dataset
-#I got some warnings, but it worked
-sliced_2017['FBI Type']=sliced_2017['FBI Code'].map(dictionary_FBI)
-sliced_2017.loc[:,'FBI Against']=sliced_2017.loc[:,'FBI Code'].map(dictionary_against)
-sliced_2017['FBI Severity']=sliced_2017['FBI Code'].map(dictionary_severity)
-
-#Create 3 new columns in 'sliced' dataset
-#I got some warnings, but it worked
-sliced['FBI Type']=sliced['FBI Code'].map(dictionary_FBI)
-sliced.loc[:,'FBI Against']=sliced.loc[:,'FBI Code'].map(dictionary_against)
-sliced['FBI Severity']=sliced['FBI Code'].map(dictionary_severity)
 
 #cross tables
 #NOTE: FIRST YOU NEED TO RUN 'ca.py'
@@ -493,19 +556,99 @@ sliced_newC2017 = sliced_2017[sliced_2017["FBI Type"] != "01B Involuntary Mansla
 # Pivot the dataframe to create a [hour x date] matrix containing counts
 sliced_newC2017 = sliced_newC2017.reset_index(name="Count")
 sliced_newC2017["Sum"]=sliced_newC2017["Count"]/sliced_newC2017.groupby("FBI Type")["Count"].transform(np.sum)
+
+
 #Plot the Heatmap
 heatcat=sns.heatmap(sliced_newC2017.pivot("FBI Type","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
 plt.xticks(rotation=45)
 ####################################################################
 
+#Create data frame per category
+
+#Homicide Monthly
+sliced_01A = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree']
+sliced_01A = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree'].groupby(["Year", "Month"])["Crime1"].size()
+sliced_01A = sliced_01A.reset_index(name="Count")
+#Scatterr Plot
+plt.scatter(sliced_01A["Month"], sliced_01A['Count'])
+
+#scatter test
+plt.scatter(sliced_2017_light["RealDate"], sliced_2017_light['Hour'], c=sliced_2017_light['daylight'])
+
+#correlation
+numpy.corrcoef(sliced_2017_light['daylight'],sliced_2017_light['FBI Severity'])
+
+#Homicide Hourly
+sliced_01AH = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree']
+sliced_01AH = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree'].groupby(["Hour", "Year"])["Crime1"].size()
+sliced_01AH = sliced_01AH.reset_index(name="Count")
+#Scatterr Plot
+plt.scatter(sliced_01AH["Hour"], sliced_01AH['Count'],)
+
+
+
+#Criminal Sexual Assault
+sliced_02 = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault']
+sliced_02 = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault'].groupby(["Year", "Month"])["Crime1"].size()
+sliced_02 = sliced_02.reset_index(name="Count")
+#Scatter Plot Criminal
+plt.scatter(sliced_02["Month"], sliced_02['Count'])
+
+sliced_02H = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault']
+sliced_02H = sliced[sliced['FBI Type'] == '02 Criminal Sexual Assault'].groupby(["Hour", "Year"])["Crime1"].size()
+sliced_02H = sliced_02H.reset_index(name="Count")
+#Scatter Plot Criminal Sexual Assault
+plt.scatter(sliced_02["Hour"], sliced_02['Count'])
+
+
+#Robbery
+sliced_03 = sliced[sliced['FBI Type'] == '03 Robbery'].groupby(["Year", "Month"])["Crime1"].size()
+sliced_03 = sliced_03.reset_index(name="Count")
+#Scatter Plot Robbery
+plt.scatter(sliced_03["Month"], sliced_03['Count'])
+
+
+
+#'01A':'01A Homicide 1st & 2nd Degree',
+    '02':'02 Criminal Sexual Assault',
+    '03':'03 Robbery',
+    '04A':'04A Aggravated Assault',
+    '04B':'04B Aggravated Battery',
+    '05':'05 Burglary',
+    '06':'06 Larceny',
+    '07':'07 Motor Vehicle Theft',
+    '09':'09 Arson',
+    '01B':'01B Involuntary Manslaughter',
+    '08A':'08A Simple Assault',
+    '08B':'08B Simple Battery',
+    '10':'10 Forgery & Counterfeiting',
+    '11':'11 Fraud',
+    '12':'12 Embezzlement',
+    '13':'13 Stolen Property',
+    '14':'14 Vandalism',
+    '15':'15 Weapons Violation',
+    '16':'16 Prostitution ',
+    '17':'17 Criminal Sexual Abuse',
+    '18':'18 Drug Abuse',
+    '19':'19 Gambling',
+    '20':'20 Offenses Against Family',
+    '22':'22 Liquor License',
+    '24':'24 Disorderly Conduct',
+    '26':'26 Misc Non-Index Offense'
+
+
+
+#Importante
 #HEATMAP by CATEGORY new cat ######################################################
 #sliced_2017=sliced[sliced.Year == 2017]
 # Getting unique values after grouping by hour and CATEGORY
-sliced_newCn = sliced[sliced["FBI Type"] !="12 Embezzlement" ].groupby(["Hour", "FBI Type"])["Crime1"].size()
+sliced_newCn = sliced_light[(sliced_light["FBI Type"] !="06 Larceny")].groupby(["daylight", "FBI Type"])["Crime1"].size()
 # Pivot the dataframe to create a [hour x date] matrix containing counts
 sliced_newCn = sliced_newCn.reset_index(name="Count")
 sliced_newCn["Sum"]=sliced_newCn["Count"]/sliced_newCn.groupby("FBI Type")["Count"].transform(np.sum)
 #Plot the Heatmap
-heatcat=sns.heatmap(sliced_newCn.pivot("FBI Type","Hour", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+heatcat=sns.heatmap(sliced_newCn.pivot("FBI Type","daylight", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+
+sliced_newCn[['Count']].plot(linewidth=5, fontsize=20)
 plt.xticks(rotation=45)
 ####################################################################
