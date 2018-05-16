@@ -7,7 +7,8 @@
                  style: 'mapbox://styles/mz8i/cjh51i78x2p2e2squotdvm06f',
                  center: [-87.6297982, 41.8781136], // initial map center in [lon,lat]
                  zoom: 12
-            }">
+            }"
+            @map-load="mapLoaded">
         </mapbox>
 
         <transition name="slide">
@@ -18,8 +19,25 @@
 
 <script>
     import Mapbox from 'mapbox-gl-vue';
+    import { EventBus } from '../event-bus.js';
+
+    let mapLoaded = false;
+    let mapObj = null;
 
     export default {
-        components: { Mapbox }
+        components: { Mapbox },
+        created: function() {
+            EventBus.$on('fly-to', function(flyParam){
+                if(mapLoaded) {
+                    mapObj.flyTo(flyParam);
+                }
+            });
+        },
+        methods: {
+            mapLoaded: function(map) {
+                mapLoaded = true;
+                mapObj = map;
+            }
+        }
     }
 </script>

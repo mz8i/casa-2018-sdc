@@ -6,8 +6,23 @@
 </template>
 
 <script>
+
+import { EventBus } from '../event-bus.js';
+
+let startPoint = { center: [-87.9074, 41.9742], zoom: 13, pitch: 0 };
+
 export default {
-    name: 'OverviewScreen'
+    name: 'OverviewScreen',
+    beforeRouteEnter: function(to, from, next) {
+        next(vm => {
+            vm.start();
+        })
+    },
+    methods: {
+        start: function() {
+            EventBus.$emit('fly-to', startPoint);
+        }
+    }
 }
 </script>
 
