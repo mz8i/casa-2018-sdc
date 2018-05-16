@@ -1,5 +1,4 @@
 analysis/data
-server/public/scripts
 
 # Logs
 logs
@@ -60,3 +59,4 @@ typings/
 # dotenv environment variables file
 .env
 
+.vscode
