@@ -236,14 +236,14 @@ sliced_2017['Daylight']="A"
 #ALL YEARS WITH LIGHT
 sliced_light=sliced.merge(datalight, on='testdateyear', how='left')
 
-#2017 WITH LIGHT
-sliced_2017_light=sliced_light[sliced_light.Year == 2017]
+
 
 
 #Day and Night
 sliced_light['daylight']= np.where((sliced_light['sunrise'] <= sliced_light['RealDate']) & (sliced_light['RealDate']< sliced_light['sunset']), "Day", "Night")
 
-
+#2017 WITH LIGHT
+sliced_2017_light=sliced_light[sliced_light.Year == 2017]
 
 
 
@@ -576,10 +576,18 @@ sliced_01A = sliced_01A.reset_index(name="Count")
 #Scatterr Plot
 
 #add binary variable by severity
-sliced_2017["Severity"] = np.where((sliced_2017["FBI Severity"]== "Less Serious"),1,0)
+sliced_2017_light["Severity"] = np.where((sliced_2017_light["FBI Severity"]== "Less Serious"),1,0)
 
-plt.scatter(sliced_2017["Longitude"], sliced_2017['Latitude'],c=sliced_2017['Severity'], s=0.001, alpha=0.5, cmap='RdYlGn')
+sliced_2017_light["NvD"] = np.where((sliced_2017_light["daylight"]== "Night"),1,0)
+
+#Map Scatter Plott
+plt.scatter(sliced_2017_light["Longitude"], sliced_2017_light['Latitude'],c=sliced_2017_light['Severity'], s=0.001, alpha=0.5, cmap='RdYlGn')
 plt.colorbar()
+
+plt.scatter(sliced_2017_light["Longitude"], sliced_2017_light['Latitude'],c=sliced_2017_light['NvD'], s=0.01, alpha=0.5, cmap='RdYlGn')
+plt.colorbar()
+
+
 
 
 plt.scatter(sliced_01A["Month"], sliced_01A['Count'])
