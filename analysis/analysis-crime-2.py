@@ -22,7 +22,8 @@ data_dir = os.path.join(analysis_dir, 'data')
 ###Crime
 data = pd.read_csv(os.path.join(data_dir, "Crimes_-_2001_to_present.csv")) 
 ### DAY Light
-datalight = pd.read_csv(os.path.join(data_dir, "export_sunlight.csv"))
+#datalight = pd.read_csv(os.path.join(data_dir, "export_sunlight.csv"))
+datalight = pd.read_csv(os.path.join(data_dir, "sunlight_local1.csv"))
 datasun = pd.read_csv(os.path.join(data_dir, "Night_Day_time1.csv"))
 data.head
 
@@ -46,19 +47,31 @@ sliced["Primary Type"].value_counts()
 
 #DAY LIGHT
 #Convert into datetime
-datalight['astronomical_twilight_begin'] =pd.to_datetime(datalight['astronomical_twilight_begin'])
-datalight['astronomical_twilight_end']=pd.to_datetime(datalight['astronomical_twilight_end'])
+#datalight['astronomical_twilight_begin'] =pd.to_datetime(datalight['astronomical_twilight_begin'])
+#datalight['astronomical_twilight_end']=pd.to_datetime(datalight['astronomical_twilight_end'])
+#
+#datalight['civil_twilight_begin']=pd.to_datetime(datalight['civil_twilight_begin'])
+#datalight['civil_twilight_end']=pd.to_datetime(datalight['civil_twilight_end'])
+#
+#datalight['nautical_twilight_begin']=pd.to_datetime(datalight['nautical_twilight_begin'])
+#datalight['nautical_twilight_end']=pd.to_datetime(datalight['nautical_twilight_end'])
+#
+#datalight['solar_noon']=pd.to_datetime(datalight['solar_noon'])
+#
+#datalight['sunrise'] = pd.to_datetime(datalight['sunrise'])
+#datalight['sunset']=pd.to_datetime(datalight['sunset'])
 
-datalight['civil_twilight_begin']=pd.to_datetime(datalight['civil_twilight_begin'])
-datalight['civil_twilight_end']=pd.to_datetime(datalight['civil_twilight_end'])
+#from dateutil import tz
+#
+datetime_columns = ['astronomical_twilight_begin', 'astronomical_twilight_end', 'civil_twilight_begin', 'civil_twilight_end', 'nautical_twilight_begin', 'nautical_twilight_end', 'solar_noon', 'sunset', 'sunrise']
+#
+datalight[datetime_columns] = datalight[datetime_columns].apply(lambda x: pd.to_datetime(x))
+#
+#utczone = tz.tzutc()
+#chicagozone = tz.gettz('Central Standard Time')
+#
+#datalight[datetime_columns] = datalight[datetime_columns].applymap(lambda x: x.replace(tzinfo=utczone).astimezone(chicagozone))
 
-datalight['nautical_twilight_begin']=pd.to_datetime(datalight['nautical_twilight_begin'])
-datalight['nautical_twilight_end']=pd.to_datetime(datalight['nautical_twilight_end'])
-
-datalight['solar_noon']=pd.to_datetime(datalight['solar_noon'])
-
-datalight['sunrise'] = pd.to_datetime(datalight['sunrise'])
-datalight['sunset']=pd.to_datetime(datalight['sunset'])
 
 #Read as date data
 date_test = "03/18/2015 07:44:00 PM"
@@ -164,15 +177,15 @@ dictionary_against={
 
 #Dcitionary severity according to FBI code
 dictionary_severity={
-'01A':'More serious',
-'02':'More serious',
-'03':'More serious',
-'04A':'More serious',
-'04B':'More serious',
-'05':'More serious',
-'06':'More serious',
-'07':'More serious',
-'09':'More serious',
+'01A':'More Serious',
+'02':'More Serious',
+'03':'More Serious',
+'04A':'More Serious',
+'04B':'More Serious',
+'05':'More Serious',
+'06':'More Serious',
+'07':'More Serious',
+'09':'More Serious',
 '01B':'Less Serious',
 '08A':'Less Serious',
 '08B':'Less Serious',
@@ -227,17 +240,8 @@ sliced_2017=sliced[sliced.Year == 2017]
 
 sliced_2017["Location Description"].value_counts()
 
-#ADD DAYLIGHT COLUMN########################################################
-sliced_2017['Daylight']="A"
-
-
-
-
 #ALL YEARS WITH LIGHT
 sliced_light=sliced.merge(datalight, on='testdateyear', how='left')
-
-
-
 
 #Day and Night
 sliced_light['daylight']= np.where((sliced_light['sunrise'] <= sliced_light['RealDate']) & (sliced_light['RealDate']< sliced_light['sunset']), "Day", "Night")
@@ -245,15 +249,121 @@ sliced_light['daylight']= np.where((sliced_light['sunrise'] <= sliced_light['Rea
 #2017 WITH LIGHT
 sliced_2017_light=sliced_light[sliced_light.Year == 2017]
 
-
-
-
 #THEFT SUBSET ###########################################################
 sliced_Theft2017=sliced_2017[sliced_2017["Primary Type"] == "THEFT"]
 #Export csv
 spatial_Theft2017=sliced_Theft2017[sliced_Theft2017.Latitude.notnull()]
 spatial_Theft2017.to_csv(os.path.join(data_dir, "export_spatial_theft_2017.csv"))
 ##########################################################################
+
+
+
+#SUBSET FOR BEAT
+
+#NIGHT AND DAY SUBSET BEAT
+ #Getting unique values after grouping beat 
+beat1 = sliced[sliced["Month"] >= 1].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat1 = beat1.reset_index(name="Total")
+
+ #Getting unique values after grouping by beat only Night
+beat2 = sliced_light[sliced_light["daylight"] == "Night"].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat2 = beat2.reset_index(name="Night")
+
+beater=pd.merge(left=beat1,right=beat2, how='left')
+beater["Pct_Night"]=beater["Night"]/beater["Total"]
+
+#SEVERITY SUBSET BEAT
+ #Getting unique values after grouping by beat only severe
+beat3 = sliced_light[sliced_light["FBI Severity"] == "More serious"].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat3 = beat3.reset_index(name="Serious")
+
+beater=pd.merge(left=beater,right=beat3, how='left')
+beater["Pct_Serious"]=beater["Serious"]/beater["Total"]
+
+del beater['Night']
+del beater['Serious']
+
+
+
+#Dictionary To get right Season (select all lines and run)
+season={
+        1:"Winter",
+        2:"Winter",
+        3:"Spring",
+        4:"Spring",
+        5:"Spring",
+        6:"Summer",
+        7:"Summer",
+        8:"Summer",
+        9:"Autumn",
+        10:"Autumn",
+        11:"Autumn",
+        12:"Winter"
+}
+
+#Add season column
+sliced_light["Season"] = sliced_light["Month"].map(season)
+
+#Season SUBSET BEAT
+ #Getting unique values after grouping by beat only severe
+beat4w = sliced_light[sliced_light["Season"] =="Winter"].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat4w = beat4w.reset_index(name="Winter Count")
+
+ #Getting unique values after grouping by beat only severe
+beat4sp = sliced_light[sliced_light["Season"] =="Spring"].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat4sp = beat4sp.reset_index(name="Spring Count")
+
+#Getting unique values after grouping by beat only severe
+beat4a = sliced_light[sliced_light["Season"] =="Autumn"].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat4a = beat4a.reset_index(name="Autumn Count")
+
+#Getting unique values after grouping by beat only severe
+beat4su = sliced_light[sliced_light["Season"] =="Summer"].groupby(["Beat"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+beat4su = beat4su.reset_index(name="Summer Count")
+
+beatSeason = pd.concat([beat4w, beat4sp,beat4su,beat4a,], axis=1)
+
+
+beatSeason['Winter'] = beatSeason['Winter Count']/beater['Total']
+beatSeason['Spring'] = beatSeason['Spring Count']/beater['Total']
+beatSeason['Summer'] = beatSeason['Summer Count']/beater['Total']
+beatSeason['Autumn'] = beatSeason['Autumn Count']/beater['Total']
+
+del beatSeason['Beat']
+
+beatSeason.drop(beatSeason.columns[[1,2,3,4,5,6,7,8]], axis=1)
+beatSeason.drop(beatSeason.columns[[5]], axis=1, inplace=True)
+
+beatStat = pd.concat([beater, beatSeason], axis=1)
+
+beatStat["Pct_Winter"]=beatStat["Winter Count"]/beatStat["Total"]
+beatStat["Pct_Spring"]=beatStat["Spring Count"]/beatStat["Total"]
+beatStat["Pct_Summer"]=beatStat["Summer Count"]/beatStat["Total"]
+beatStat["Pct_Autumn"]=beatStat["Autumn Count"]/beatStat["Total"]
+
+del beatStat["Winter Count"]
+del beatStat["Spring Count"]
+del beatStat["Summer Count"]
+del beatStat["Autumn Count"]
+del beatStat["Total"]
+
+#Export csv
+beatStat.to_csv(os.path.join(data_dir, "beatStat_2017.csv"))
+
+
+
+
+
+
+
+##############################################################################
 
 #Remove data between 00:00 and 01:00
 sliced_23=sliced[sliced.Hour != 0]
@@ -281,45 +391,53 @@ export_2017=sliced[sliced.Year == 2017]
 sliced["Primary Type"].value_counts()
 
 
-#Total Crime in dataset
-#General
+#TOTAL CRIME #################################################
 total_crimes = sliced["Crime1"].value_counts()[1] #6,594,507
-#Severity
-sliced["FBI Severity"].value_counts(1)[1] #40.1% of crimes are "more serious" according to FBI standards
-sliced["FBI Severity"].value_counts(1) #60% of crimes "less serious" 
 
+#SEVERITY OF CRIME IN CHICAGO##################################
+ #40.1% of crimes are "More Serious" according to FBI standards
+sliced["FBI Severity"].value_counts(1)[1]
+#59.9% of crimes "less serious" 
+sliced["FBI Severity"].value_counts(1) 
 
-serious_crimes = sliced_light["FBI Severity"].value_counts()[1] # 2,657,064
-less_serious = sliced_light["FBI Severity"].value_counts()[0] #3956462
+#2,657,064 S
+serious_crimes = sliced_light["FBI Severity"].value_counts()[1] 
+#3,956,462 LS
+less_serious_crimes = sliced_light["FBI Severity"].value_counts()[0] 
 
-#Crimes at night: 
-nightcrime = sliced_light["daylight"].value_counts()[0] # Total crimes at night 4,666,700
-sliced_light["daylight"].value_counts(1) #TOTAL: 70,53% of crimes are at Night
+#CRIME TIME IN CHICAGO################__Day>NIGHT__##############
+#At night 45,54%
+sliced_light["daylight"].value_counts(1)
+nightcrime = sliced_light["daylight"].value_counts()[1]
+#day 54,46% 
 
+#NIGHT CRIME IN CHICAGO DISTRIBUTION####__Serious<Less__##########
 # Write 1 if at night and severe
-sliced_light["nightsev"]=np.where((sliced_light["FBI Severity"]=="More serious") & (sliced_light["daylight"]=="Night"),1,0)
+sliced_light["nightsev"]=np.where((sliced_light["FBI Severity"]=="More Serious") & (sliced_light["daylight"]=="Night"),1,0)
 
-#Number of Severe crimes at night 
-seriousNight = sliced_light["nightsev"].value_counts()[1] #1,884,373
+Night_serious = sliced_light["nightsev"].value_counts()[1] 
 
-#Percentage of crimes at night are serious
-pcrimesSerious = sliced_light["nightsev"].value_counts()[1]/sliced_light["daylight"].value_counts()[0] #40.37% of crimes at night are serious
+#at night: 32.09% are serious
+Night_seriousP = sliced_light["nightsev"].value_counts()[1]/sliced_light["daylight"].value_counts()[0]
 
-seriousNightP = seriousNight/serious_crimes #70.91% Of serious are at night,between sunset and sunrise
+#at night: 77.91% are less serious 
 
+#SERIOUS CRIME######################__Night<Day__##############
+#at night: 43.50%
+#day: 56.50%
+Serious_nightP = Night_serious/serious_crimes 
+
+#LESS SIRIOUS CRIME#################__Night>Day__###############
 # Write 1 if at night and not severe
 sliced_light["nightsevless"]=np.where((sliced_light["FBI Severity"]=="Less Serious") & (sliced_light["daylight"]=="Night"),1,0)
 
-#Crime less serious at night
-sliced_light["nightsevless"].value_counts()[1] #2,782,327
+sliced_light["nightsevless"].value_counts()[1]
 
+Less_night = sliced_light["nightsevless"].value_counts()[1] #2,782,327
 
-less_serious_crime = sliced_light["FBI Severity"].value_counts()[0] #3,956,462
-lessNight = sliced_light["nightsevless"].value_counts()[1] #2,782,327
+Less_nightP =Less_night/less_serious_crimes
 
-lessNightP =lessNight/less_serious_crime
-
-lessNightP #70.32% at Night is less serious
+Less_nightP #46.91% at Night is less serious
 
 sliced_2017["Primary Type"].value_counts()
 sliced_2016["Primary Type"].value_counts()
@@ -580,11 +698,16 @@ sliced_2017_light["Severity"] = np.where((sliced_2017_light["FBI Severity"]== "L
 
 sliced_2017_light["NvD"] = np.where((sliced_2017_light["daylight"]== "Night"),1,0)
 
-#Map Scatter Plott
-plt.scatter(sliced_2017_light["Longitude"], sliced_2017_light['Latitude'],c=sliced_2017_light['Severity'], s=0.001, alpha=0.5, cmap='RdYlGn')
+
+#scattermatrix
+outputbeatStat = pd.scatter_matrix(beatStat, alpha=0.2)
+
+#Map Scatter Plott SEVERITY
+plt.scatter(sliced_2017_light["Longitude"], sliced_2017_light['Latitude'],c=sliced_2017_light['Severity'], s=0.05, alpha=0.5, cmap='RdYlGn')
 plt.colorbar()
 
-plt.scatter(sliced_2017_light["Longitude"], sliced_2017_light['Latitude'],c=sliced_2017_light['NvD'], s=0.01, alpha=0.5, cmap='RdYlGn')
+
+plt.scatter(sliced_2017_light["Longitude"], sliced_2017_light['Latitude'],c=sliced_2017_light['Hour'], s=0.01, alpha=0.5, cmap='RdYlGn')
 plt.colorbar()
 
 
@@ -594,9 +717,6 @@ plt.scatter(sliced_01A["Month"], sliced_01A['Count'])
 
 #scatter test
 plt.scatter(sliced_2017_light["RealDate"], sliced_2017_light['Hour'], c=sliced_2017_light['daylight'])
-
-#correlation
-numpy.corrcoef(sliced_2017_light['daylight'],sliced_2017_light['FBI Severity'])
 
 #Homicide Hourly
 sliced_01AH = sliced[sliced['FBI Type'] == '01A Homicide 1st & 2nd Degree']
@@ -644,3 +764,19 @@ heatcat=sns.heatmap(sliced_newCn.pivot("FBI Type","daylight", "Sum"), annot=Fals
 sliced_newCn[['Count']].plot(linewidth=5, fontsize=20)
 plt.xticks(rotation=45)
 ####################################################################
+
+#Importante
+#HEATMAP by CATEGORY new cat SEASON ######################################################
+#sliced=sliced[sliced.Year == 2017]
+# Getting unique values after grouping by hour and CATEGORY
+sliced_newSeason = sliced_light[(sliced_light["FBI Type"] !="01B Involuntary Manslaughter")].groupby(["Season", "FBI Type"])["Crime1"].size()
+# Pivot the dataframe to create a [hour x date] matrix containing counts
+sliced_newSeason = sliced_newSeason.reset_index(name="Count")
+sliced_newSeason["Sum"]=sliced_newSeason["Count"]/sliced_newSeason.groupby("FBI Type")["Count"].transform(np.sum)
+#Plot the Heatmap
+heatcat=sns.heatmap(sliced_newSeason.pivot("FBI Type","Season", "Sum"), annot=False,cmap="BuPu",yticklabels=1)
+
+sliced_newCn[['Count']].plot(linewidth=5, fontsize=20)
+plt.xticks(rotation=45)
+####################################################################
+
