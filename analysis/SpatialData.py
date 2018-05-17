@@ -5,12 +5,8 @@ Created on Wed May 16 16:43:14 2018
 @author: josen
 """
 
-import shapefile as shp
-import os
 import geopandas as gpd
-from osgeo import ogr
 import pandas as pd
-import numpy as np
 from geopandas import GeoDataFrame
 from shapely.geometry import Point
 
@@ -44,12 +40,16 @@ block_with_beat = block_with_beat.set_geometry('geometry')
 #Aggregate population per Beat
 beat_pop = block_with_beat.dissolve(by='beat_num', aggfunc='sum')
 
+
+
+
+
+
 #Produce Crime GeoDataFrame
 geometry = [Point(xy) for xy in zip(ch_crime.Lon, ch_crime.Lat)]
 ch_crime = ch_crime.drop(['Lon', 'Lat'], axis=1)
 crs = {'init': 'epsg:4326'}
 crimes_gdf = GeoDataFrame(ch_crime, crs=crs, geometry=geometry)
-
 
 beat_pop = beat_pop.rename(columns={'index_right': 'index'})
 
@@ -57,41 +57,5 @@ beat_crime = gpd.sjoin(beat_pop, crimes_gdf, how="inner", op='intersects')
 
 
 
-# We're going to keep a list of how many points we find.
-crime_in_beats = []
-crime_copy=crimes_gdf.copy()
-
-# Loop over polygons with index i.
-for i, poly in beat_pop.iterrows():
-
-    # Keep a list of points in this poly
-    crimes_in_this_beat = []
-
-    # Now loop over all points with index j.
-    for j, pt in crime_copy.iterrows():
-        if poly.geometry.contains(pt.geometry):
-            # Then it's a hit! Add it to the list,
-            # and drop it so we have less hunting.
-            crimes_in_this_beat.append(pt.geometry)
-            crime_copy = crime_copy.drop([j])
-
-    # We could do all sorts, like grab a property of the
-    # points, but let's just append the number of them.
-    crime_in_beats.append(len(crimes_in_this_beat))
-
-# Add the number of points for each poly to the dataframe.
-polygons['number of points'] = gpd.GeoSeries(pts_in_polys)
-
-
-
-
-
-
-
-beat_pop_32616 = beat_pop.to_crs('+init=epsg:32616')
-
-beat_pop.plot(column = 'TOTAL POPULATION', cmap='OrRd')
-
-beat_pop.crs
 
 
