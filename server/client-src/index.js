@@ -5,14 +5,21 @@ import VueRouter from 'vue-router';
 import App from './components/App.vue';
 import IntroScreen from './components/IntroScreen.vue';
 import OverviewScreen from './components/OverviewScreen.vue';
+import AnalysisScreen from './components/AnalysisScreen.vue';
+import {EventBus} from './event-bus.js';
 
 Vue.use(VueRouter);
 
 const router = new VueRouter({
     routes: [
         { path: '/intro', component: IntroScreen},
-        { path: '/overview', component: OverviewScreen}
+        { path: '/overview', component: OverviewScreen},
+        { path: '/analysis', component: AnalysisScreen}
     ]
+});
+
+EventBus.$on('map-loaded', function () {
+    router.push('/overview');
 });
 
 let vm = new Vue({
@@ -20,7 +27,7 @@ let vm = new Vue({
     render: function(createElem) { return createElem(App)}
 }).$mount("#app-container");
 
-router.replace('overview');
+
 
 // const map = new mapboxgl.Map({
 //     container: 'map', // container element id
