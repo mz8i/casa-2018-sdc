@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "@deck.gl/core": "^5.2.5",
     "consolidate": "^0.15.1",
     "cors": "^2.8.4",
     "d3": "^5.4.0",
@@ -16,7 +17,8 @@
     "nodemon": "^1.17.4",
     "suncalc": "^1.8.0",
     "vue": "^2.5.16",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "wellknown": "^0.5.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

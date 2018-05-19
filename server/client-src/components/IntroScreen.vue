@@ -8,7 +8,7 @@
 <script>
 import { EventBus } from '../event-bus.js';
 
-let startPoint = { center: [-87.6297, 41.8781], zoom: 15, pitch: 60 };
+let startPoint = { center: [-87.6297, 41.8781], zoom: 13, pitch: 60, bearing: 0 };
 
 export default {
     name: 'IntroScreen',
@@ -17,9 +17,16 @@ export default {
             vm.start();
         })
     },
+    beforeRouteLeave: function(to, from, next) {
+        this.end();
+        next();
+    },
     methods: {
         start: function() {
-            EventBus.$emit('fly-to', startPoint);
+
+        },
+
+        end: function() {
         }
     }
 }
