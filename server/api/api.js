@@ -43,7 +43,7 @@ api.get('/crimes', function(req, res, next){
 
 
 api.get('/crimes/types', function(req, res){
-        var sql = `SELECT FBIType as code, Description as type FROM FBICrimeTypes`;
+        var sql = "SELECT FBIType as code, Description as type FROM FBICrimeTypes";
 
         sqlResponse(sql, res);
 });
