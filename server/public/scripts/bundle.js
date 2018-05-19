@@ -23692,6 +23692,13 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -23723,6 +23730,16 @@ var deckLayers = {};
         _event_bus__WEBPACK_IMPORTED_MODULE_2__["EventBus"].$on('add-deck-layer', this.addDeckLayer);
         _event_bus__WEBPACK_IMPORTED_MODULE_2__["EventBus"].$on('remove-deck-layer', this.removeDeckLayer);
     },
+    data: function data() {
+        return {
+            viewState: {}
+        };
+    },
+    computed: {
+        viewStateString: function viewStateString() {
+            return JSON.stringify(this.viewState, null, 2);
+        }
+    },
     mounted: function mounted() {
         mapObj = new _mapbox__WEBPACK_IMPORTED_MODULE_0__["default"]({
             mapboxApiAccessToken: mapboxToken,
@@ -23731,6 +23748,7 @@ var deckLayers = {};
             viewState: initialViewState
         });
 
+        var context = this;
         deckgl = new _deck_gl_core__WEBPACK_IMPORTED_MODULE_1__["Deck"]({
             canvas: 'deck-canvas',
             width: '100%',
@@ -23742,6 +23760,7 @@ var deckLayers = {};
                 if (!viewState.stopPropagation) {
                     mapObj.setProps({ viewState: viewState });
                 }
+                context.setViewState(viewState);
             }
         });
 
@@ -23752,6 +23771,21 @@ var deckLayers = {};
         _event_bus__WEBPACK_IMPORTED_MODULE_2__["EventBus"].$emit('map-loaded');
     },
     methods: {
+        setViewState: function setViewState(viewState) {
+            var longitude = viewState.longitude,
+                latitude = viewState.latitude,
+                zoom = viewState.zoom,
+                bearing = viewState.bearing,
+                pitch = viewState.pitch;
+
+            this.viewState = {
+                longitude: longitude, latitude: latitude, zoom: zoom, bearing: bearing, pitch: pitch
+            };
+        },
+        copyCameraDebug: function copyCameraDebug() {
+            this.$refs.camera.select();
+            document.execCommand('copy');
+        },
         flyTo: function flyTo(flyOptions) {
             if (mapObj) {
                 mapObj._map.flyTo(flyOptions);
@@ -23886,6 +23920,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 
 
 
@@ -23908,7 +23943,8 @@ var communityAreas = null;
             maxYear: 2017,
             crimeType: 'All',
             crimeTypes: [],
-            tooltipText: ''
+            tooltipText: '',
+            normaliseGlobal: true
         };
     },
     beforeRouteEnter: function beforeRouteEnter(to, from, next) {
@@ -24002,7 +24038,7 @@ var communityAreas = null;
             var year = this.year;
             setTimeout(function () {
                 if (_this2.year == year) _this2.updateHexagons();
-            }, 2000);
+            }, 1000);
         },
         updateHexagons: function updateHexagons() {
             var context = this;
@@ -24015,7 +24051,7 @@ var communityAreas = null;
         },
         addHexagons: function addHexagons(data) {
             var context = this;
-            var hexLayer = new _deck_gl_core__WEBPACK_IMPORTED_MODULE_1__["HexagonLayer"]({
+            var hexOptions = {
                 id: 'crimes-3d',
                 data: data.filter(function (x) {
                     return x.Longitude && x.Latitude;
@@ -24032,7 +24068,11 @@ var communityAreas = null;
                     var object = _ref.object;
                     return context.setTooltip(context.getTooltipText(object));
                 }
-            });
+            };
+
+            if (this.normaliseGlobal) hexOptions.elevationDomain = [0, 2000];
+
+            var hexLayer = new _deck_gl_core__WEBPACK_IMPORTED_MODULE_1__["HexagonLayer"](hexOptions);
 
             _event_bus_js__WEBPACK_IMPORTED_MODULE_0__["EventBus"].$emit('add-deck-layer', hexLayer);
         },
@@ -24084,7 +24124,7 @@ exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader
 
 
 // module
-exports.push([module.i, "\n#map-container[data-v-66b34037] {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n}\n#map-container > *[data-v-66b34037] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n}\n", ""]);
+exports.push([module.i, "\n#map-container[data-v-66b34037] {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    bottom: 0;\n}\n#map-container > *[data-v-66b34037] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n}\n#camera-debug[data-v-66b34037] {\n    background-color: rgba(100, 100, 100, 0.5);\n    width: 250px;\n    height: 200px;\n    position: absolute;\n    bottom: 2px;\n    right: 2px;\n}\n", ""]);
 
 // exports
 
@@ -55574,6 +55614,34 @@ var render = function() {
         _c("canvas", { ref: "deck", attrs: { id: "deck-canvas" } })
       ]),
       _vm._v(" "),
+      _c("div", { attrs: { id: "camera-debug" } }, [
+        _c("textarea", {
+          directives: [
+            {
+              name: "model",
+              rawName: "v-model",
+              value: _vm.viewStateString,
+              expression: "viewStateString"
+            }
+          ],
+          ref: "camera",
+          attrs: { readonly: "", cols: "30", rows: "10" },
+          domProps: { value: _vm.viewStateString },
+          on: {
+            input: function($event) {
+              if ($event.target.composing) {
+                return
+              }
+              _vm.viewStateString = $event.target.value
+            }
+          }
+        }),
+        _vm._v(" "),
+        _c("br"),
+        _vm._v(" "),
+        _c("button", { on: { click: _vm.copyCameraDebug } }, [_vm._v("Copy")])
+      ]),
+      _vm._v(" "),
       _c(
         "transition",
         { attrs: { name: "slide" } },
@@ -55721,6 +55789,48 @@ var render = function() {
         ),
         _vm._v(" "),
         _c("br"),
+        _vm._v(" "),
+        _c("label", [
+          _c("input", {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.normaliseGlobal,
+                expression: "normaliseGlobal"
+              }
+            ],
+            attrs: { type: "checkbox" },
+            domProps: {
+              checked: Array.isArray(_vm.normaliseGlobal)
+                ? _vm._i(_vm.normaliseGlobal, null) > -1
+                : _vm.normaliseGlobal
+            },
+            on: {
+              input: _vm.updateHexagons,
+              change: function($event) {
+                var $$a = _vm.normaliseGlobal,
+                  $$el = $event.target,
+                  $$c = $$el.checked ? true : false
+                if (Array.isArray($$a)) {
+                  var $$v = null,
+                    $$i = _vm._i($$a, $$v)
+                  if ($$el.checked) {
+                    $$i < 0 && (_vm.normaliseGlobal = $$a.concat([$$v]))
+                  } else {
+                    $$i > -1 &&
+                      (_vm.normaliseGlobal = $$a
+                        .slice(0, $$i)
+                        .concat($$a.slice($$i + 1)))
+                  }
+                } else {
+                  _vm.normaliseGlobal = $$c
+                }
+              }
+            }
+          }),
+          _vm._v("Normalise globally")
+        ]),
         _vm._v("\n        " + _vm._s(_vm.tooltipText) + "\n    ")
       ])
     ],

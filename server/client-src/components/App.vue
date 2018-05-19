@@ -6,6 +6,13 @@
             <canvas id="deck-canvas" ref='deck'></canvas>
         </div>
 
+        <div id="camera-debug">
+            <textarea v-model="viewStateString" readonly ref="camera" cols=30 rows=10>
+            </textarea>
+            <br />
+            <button @click="copyCameraDebug">Copy</button>
+        </div>
+
         <transition name="slide">
             <router-view ref="views"></router-view>
         </transition>
@@ -43,6 +50,14 @@
             EventBus.$on('add-deck-layer', this.addDeckLayer);
             EventBus.$on('remove-deck-layer', this.removeDeckLayer);
         },
+        data: () => ({
+            viewState: {}
+        }),
+        computed: {
+            viewStateString: function() {
+                return JSON.stringify(this.viewState, null, 2);
+            }
+        },
         mounted: function() {
             mapObj = new Map({
                 mapboxApiAccessToken: mapboxToken,
@@ -51,6 +66,7 @@
                 viewState: initialViewState
             });
 
+            var context = this;
             deckgl = new Deck({
                 canvas: 'deck-canvas',
                 width: '100%',
@@ -62,6 +78,7 @@
                     if(!viewState.stopPropagation) {
                         mapObj.setProps({viewState});
                     }
+                    context.setViewState(viewState);
                 }
             });
 
@@ -70,6 +87,16 @@
             EventBus.$emit('map-loaded');
         },
         methods: {
+            setViewState: function(viewState) {
+                const {longitude, latitude, zoom, bearing, pitch} = viewState;
+                this.viewState = {
+                    longitude, latitude, zoom, bearing, pitch
+                };
+            },
+            copyCameraDebug: function() {
+                this.$refs.camera.select();
+                document.execCommand('copy');
+            },
             flyTo: function(flyOptions){
                 if(mapObj) {
                     mapObj._map.flyTo(flyOptions);
@@ -140,5 +167,14 @@
         left: 0;
         width: 100%;
         height: 100%;
+    }
+
+    #camera-debug {
+        background-color: rgba(100, 100, 100, 0.5);
+        width: 250px;
+        height: 200px;
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
     }
 </style>

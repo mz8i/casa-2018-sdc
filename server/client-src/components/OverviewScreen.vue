@@ -11,6 +11,7 @@
                 <option v-for="ct in crimeTypes" :key="ct.code" :value="ct.code"> {{ct.type}} </option>
             </select>
             <br />
+            <label><input v-model="normaliseGlobal" type="checkbox" @input="updateHexagons">Normalise globally</label>
             {{tooltipText}}
         </div>
     </div>
@@ -37,7 +38,8 @@ export default {
         maxYear: 2017,
         crimeType: 'All',
         crimeTypes: [],
-        tooltipText: ''
+        tooltipText: '',
+        normaliseGlobal: true
     }),
     beforeRouteEnter: function(to, from, next) {
         next(vm => {
@@ -129,7 +131,7 @@ export default {
             var year = this.year;
             setTimeout(() => {
                 if(this.year == year) this.updateHexagons();
-            }, 2000);
+            }, 1000);
         },
         updateHexagons: function() {
             var context = this;
@@ -143,7 +145,7 @@ export default {
         },
         addHexagons: function(data) {
             var context = this;
-            let hexLayer = new HexagonLayer({
+            let hexOptions = {
                 id: 'crimes-3d',
                 data: data.filter(x => x.Longitude && x.Latitude),
                 pickable: true,
@@ -153,7 +155,11 @@ export default {
                 opacity: 0.5,
                 getPosition: d => [d.Longitude, d.Latitude],
                 onHover: ({object}) => context.setTooltip(context.getTooltipText(object))
-            });
+            };
+
+            if(this.normaliseGlobal) hexOptions.elevationDomain = [0, 2000];
+
+            let hexLayer = new HexagonLayer(hexOptions);
 
             EventBus.$emit('add-deck-layer', hexLayer);
         },
