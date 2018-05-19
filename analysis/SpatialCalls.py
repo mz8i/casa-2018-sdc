@@ -17,6 +17,7 @@ from shapely.geometry import Point
 from sqlalchemy import create_engine
 
 
+
 #First you need to change your current directory to the analysis directory in your computer
 #os.chdir("C:/.../casa-2018-sdc/analysis")
 analysis_dir = os.getcwd()
@@ -24,73 +25,63 @@ data_dir = os.path.join(analysis_dir, 'data')
 
 # IMPORT NECESSARY PACKAGES##############################################
 ## IMPORT DATA
-###Crime
+###311 Calls
 alley_311 = pd.read_csv(os.path.join(data_dir, "311_Service_Requests_-_Alley_Lights_Out.csv")) 
 all_lights_311 = pd.read_csv(os.path.join(data_dir, "311_Service_Requests_-_Street_Lights_-_All_Out.csv")) 
 one_light_311 = pd.read_csv(os.path.join(data_dir, "311_Service_Requests_-_Street_Lights_-_One_Out.csv")) 
 
-#Remove Duplicates
-alley_311 = alley_311[alley_311.Status.str[-5:] != "- Dup"]
-all_lights_311 = all_lights_311[all_lights_311.Status.str[-5:] != "- Dup"]
-one_light_311 = one_light_311[one_light_311.Status.str[-5:] != "- Dup"]
+one_light_311['Type of Service Request'] = one_light_311['Type of Service Request'].replace({"Street Light - 1/Out": "Street Light Out"})
 
+#Join All dataframes for cleaning
+Dataframes = [alley_311, all_lights_311, one_light_311]
+calls311 = pd.concat(Dataframes)
+
+#Remove Duplicates
+calls311 = calls311[calls311.Status.str[-5:] != "- Dup"]
+
+#Transform dates to correct type
+calls311['RealCreationDate'] =  pd.to_datetime(calls311['Creation Date'], format="%m/%d/%Y")
+calls311['RealCompletionDate'] =  pd.to_datetime(calls311['Completion Date'], format="%m/%d/%Y")
+
+#Calculate Answer time for the calls
+calls311_Completed = calls311[calls311.Status == "Completed"]
+calls311_Completed['RespTime']= calls311_Completed['RealCompletionDate']-calls311_Completed['RealCreationDate']
+calls311_Completed['RespTime']= (calls311_Completed['RespTime'] / np.timedelta64(1, 'D')).astype(int)
+
+#Filtering for 2017
+calls311_Completed['Year']=calls311_Completed['RealCreationDate'].dt.year
+calls311_2017=calls311_Completed[calls311_Completed.Year == 2017]
+
+####Spatial Analysis
 #Import Police Beats
 ch_pbeats = gpd.read_file(os.path.join(data_dir, 'BeatsPolice.shp'))
-
 #Project CRS WGS84 EPSG:4326
 crs = {'init': 'epsg:4326'}
 #Change Latitude and Longitude names
-alley_311=alley_311.rename(columns={'Latitude':'Lat','Longitude':'Lon'})
-all_lights_311=all_lights_311.rename(columns={'Latitude':'Lat','Longitude':'Lon'})
-one_light_311=one_light_311.rename(columns={'Latitude':'Lat','Longitude':'Lon'})
+calls311_2017=calls311_2017.rename(columns={'Latitude':'Lat','Longitude':'Lon'})
 #Create a Point data with Lon and Lat
-g_alley = [Point(xy) for xy in zip(alley_311.Lon, alley_311.Lat)]
-g_all_light = [Point(xy) for xy in zip(all_lights_311.Lon, all_lights_311.Lat)]
-g_one_light = [Point(xy) for xy in zip(one_light_311.Lon, one_light_311.Lat)]
-#Delete Long and Lat columns from dataframes
-#alley_311 =alley_311.drop(['Lon', 'Lat'], axis=1)
-#all_lights_311 =all_lights_311.drop(['Lon', 'Lat'], axis=1)
-#one_light_311 =one_light_311.drop(['Lon', 'Lat'], axis=1)
-#Create GeoDataFrame from point dataframe
-gdf_alleys = GeoDataFrame(alley_311, crs=crs, geometry=g_alley)
-gdf_all_lights = GeoDataFrame(all_lights_311, crs=crs, geometry=g_all_light)
-gdf_one_light = GeoDataFrame(one_light_311, crs=crs, geometry=g_one_light)
+g_calls311_2017 = [Point(xy) for xy in zip(calls311_2017.Lon, calls311_2017.Lat)]
+#Create the GeoDataframe
+gdf_calls311_2017 = GeoDataFrame(calls311_2017, crs=crs, geometry=g_calls311_2017)
+#Assign each call its correspondent Beat
+id_calls311_2017 = gpd.sjoin(ch_pbeats, gdf_calls311_2017, how="inner", op='intersects')
 
-#Spatial Join between Police Beats and Call Centroids
-beat_calls = gpd.sjoin(ch_pbeats, gdf_alleys, how="inner", op='intersects')
-beat_calls = gpd.sjoin(ch_pbeats, gdf_all_lights, how="inner", op='intersects')
-beat_calls = gpd.sjoin(ch_pbeats, gdf_one_light, how="inner", op='intersects')
+#Filter Dataframes per type of call
+alley_2017=id_calls311_2017[id_calls311_2017['Type of Service Request'] == 'Alley Light Out']
+all_lights_2017=id_calls311_2017[id_calls311_2017['Type of Service Request'] == 'Street Lights - All/Out']
+one_light_2017=id_calls311_2017[id_calls311_2017['Type of Service Request'] == 'Street Light Out']
 
-# Make a copy because I'm going to drop points as I
-# assign them to polys, to speed up subsequent search.
-pts = gdf_alleys.copy() 
+#Count number of calls per beat and calculate the mean answer time for the calls
+beat_alley = alley_2017.Status.groupby(alley_2017['beat_num']).count().to_frame(name='Calls_Alley')
+beat_all_out = all_lights_2017.Status.groupby(all_lights_2017['beat_num']).count().to_frame(name='Calls_All_Out')
+beat_one_out = one_light_2017.Status.groupby(one_light_2017['beat_num']).count().to_frame(name='Calls_One_Out')
 
-# We're going to keep a list of how many points we find.
-pts_in_polys = []
+beat_alley['Time_Alleys'] = alley_2017['RespTime'].groupby(alley_2017['beat_num']).mean()
+beat_all_out['Time_All_Out'] = all_lights_2017['RespTime'].groupby(all_lights_2017['beat_num']).mean()
+beat_one_out['Time_One_Out'] = one_light_2017['RespTime'].groupby(one_light_2017['beat_num']).mean()
 
-# Loop over polygons with index i.
-for i, poly in ch_pbeats.iterrows():
-
-    # Keep a list of points in this poly
-    pts_in_this_poly = []
-
-    # Now loop over all points with index j.
-    for j, pt in pts.iterrows():
-        if poly.geometry.contains(pt.geometry):
-            # Then it's a hit! Add it to the list,
-            # and drop it so we have less hunting.
-            pts_in_this_poly.append(pt.geometry)
-            pts = pts.drop([j])
-
-    # We could do all sorts, like grab a property of the
-    # points, but let's just append the number of them.
-    pts_in_polys.append(len(pts_in_this_poly))
-
-# Add the number of points for each poly to the dataframe.
-ch_pbeats['number of points'] = gpd.GeoSeries(pts_in_polys)
+#Combine everithing into a DataFrame
+beat_calls = pd.concat([beat_alley, beat_all_out,beat_one_out], axis=1)
+beat_calls.to_csv('beat_calls.csv')
 
 
-fig, ax = plt.subplots(1)
-base = ch_pbeats.plot(ax=ax, color='gray')
-gdf_alleys.plot(ax=base, marker="o",markersize=20, alpha=0.5)
-_ = ax.axis('off')
