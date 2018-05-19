@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1526678518995.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3062809104",
+    "id" : "861ADCAD",
+    "lastKnownWriteTime" : 1526696462,
+    "last_content_update" : 1526696462794,
+    "path" : "~/GitHub/casa-2018-sdc/analysis/PCA.R",
+    "project_path" : "PCA.R",
+    "properties" : {
+        "cursorPosition" : "112,0",
+        "scrollLine" : "97"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
