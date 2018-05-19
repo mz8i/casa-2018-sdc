@@ -43,23 +43,22 @@ api.get('/crimes', function(req, res, next){
 
 
 api.get('/crimes/types', function(req, res){
-        var sql = "SELECT DISTINCT PrimaryType FROM Crimes";
+        var sql = `SELECT FBIType as code, Description as type FROM FBICrimeTypes`;
 
         sqlResponse(sql, res);
 });
 
 //  API EndPoint to get data from a specific type and year
-api.get('/crimes/:year/:primarytype', function (req, res) {
+api.get('/crimes', function (req, res) {
 
       // If all the variables are provided connect to the database
-      if(req.params.primarytype != "" && req.params.year){
-               
+        if (req.query.type && req.query.year){
                 // Parse the values from the URL into numbers for the query
-                var year = parseFloat(req.params.year);
-                var primarytype = req.params.primarytype;
+                var year = parseInt(req.query.year);
+                var type = req.query.type;
 
                 // SQL Statement to run
-              var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude, Crimes.Date FROM Crimes WHERE PrimaryType = "+connection.escape(primarytype)+" and YEAR = "+year+"";
+              var sql = "SELECT Crimes.Beat, Crimes.District, Crimes.Ward, Crimes.Latitude, Crimes.Longitude, Crimes.Date FROM Crimes WHERE FBICode = "+mysql.escape(type)+" and YEAR = "+year+"";
               
               sqlResponse(sql, res);
         }else{
@@ -70,17 +69,18 @@ api.get('/crimes/:year/:primarytype', function (req, res) {
 
 
 //  API EndPoint to get data from a specific type and year, for heatmap draw
-api.get('/crimes/:year/:primarytype/coordinates', function (req, res) {
+api.get('/crimes/coordinates', function (req, res) {
 
         // If all the variables are provided connect to the database
-        if (req.params.primarytype != "" && req.params.year) {
+        if (req.query.year) {
 
                 // Parse the values from the URL into numbers for the query
-                var year = parseFloat(req.params.year);
-                var primarytype = req.params.primarytype;
+                var year = parseInt(req.query.year);
+                var type = req.query.type;
 
                 // SQL Statement to run
-                var sql = "SELECT Crimes.Latitude, Crimes.Longitude FROM Crimes WHERE PrimaryType = " + connection.escape(primarytype) + " and YEAR = " + year + "";
+                var sql = "SELECT Crimes.Latitude, Crimes.Longitude FROM Crimes WHERE Year = " + year;
+                if (type) sql += " and FBICode = " + mysql.escape(type);
 
                 sqlResponse(sql, res);
         } else {
@@ -101,7 +101,7 @@ api.get('/crimes/:primarytype', function (req, res) {
                 var primarytype = req.params.primarytype;
 
                 // SQL Statement to run
-                var sql = "SELECT Crimes.Date, Crimes.Latitude, Crimes.Longitude, Crimes.Date FROM Crimes WHERE PrimaryType = " + connection.escape(primarytype) + " ";
+                var sql = "SELECT Crimes.Date, Crimes.Latitude, Crimes.Longitude, Crimes.Date FROM Crimes WHERE PrimaryType = " + mysql.escape(primarytype) + " ";
 
                sqlResponse(sql, res);
         } else {
@@ -110,5 +110,15 @@ api.get('/crimes/:primarytype', function (req, res) {
         }
 });
 
+
+api.get('/beats', function(req,res){
+        var sql = "SELECT beat_num, wkt, `TOTAL POPULATION` from beat_population";
+
+        sqlResponse(sql, res);
+});
+
+api.get('/chicago/wkt', function(req,res){
+        sqlResponse("SELECT geometry AS wkt FROM ch_boundaries", res);
+});
 
 module.exports = api;
