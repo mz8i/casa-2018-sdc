@@ -12,17 +12,17 @@ api.use(cors({
         allowedHeaders: ['X-Requested-With']
 }));
 
-// MySQL Connection Variables
-var connection = mysql.createConnection({
-  host     : 'dev.spatialdatacapture.org',
-  user     : 'ucfnmbz',
-  password : 'sadohazije',
-  database : 'ucfnmbz'
-});
-
 function sqlResponse(query, res) {
         // Log it on the screen for debugging
         console.log(query);
+
+        // MySQL Connection Variables
+        var connection = mysql.createConnection({
+                host: 'dev.spatialdatacapture.org',
+                user: 'ucfnmbz',
+                password: 'sadohazije',
+                database: 'ucfnmbz'
+        });
 
         // Run the SQL Query
         connection.query(query, function (err, rows, fields) {
