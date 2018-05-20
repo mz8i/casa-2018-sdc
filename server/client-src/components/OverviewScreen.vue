@@ -1,7 +1,7 @@
 <template>
     <div class="screen overview-screen">
         <h1>Overview Screen test</h1>
-        <router-link to="analysis">Go to Analysis</router-link>
+        <router-link to="time">Go to Time</router-link>
         <div class="screen-control">
             <input v-model="year" type="range" :min="minYear" :max="maxYear" step="1" @input="_onYearSliderInput" >
             {{year}}

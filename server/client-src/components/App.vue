@@ -13,7 +13,7 @@
             <button @click="copyCameraDebug">Copy</button>
         </div>
 
-        <transition name="slide">
+        <transition name="slide-up">
             <router-view ref="views"></router-view>
         </transition>
     </div>

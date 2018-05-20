@@ -5,6 +5,7 @@ import VueRouter from 'vue-router';
 import App from './components/App.vue';
 import IntroScreen from './components/IntroScreen.vue';
 import OverviewScreen from './components/OverviewScreen.vue';
+import TimeScreen from './components/TimeScreen.vue';
 import AnalysisScreen from './components/AnalysisScreen.vue';
 import {EventBus} from './event-bus.js';
 
@@ -14,12 +15,13 @@ const router = new VueRouter({
     routes: [
         { path: '/intro', component: IntroScreen},
         { path: '/overview', component: OverviewScreen},
+        { path: '/time', component: TimeScreen},
         { path: '/analysis', component: AnalysisScreen}
     ]
 });
 
 EventBus.$on('map-loaded', function () {
-    router.push('/overview');
+    router.push('/intro');
 });
 
 let vm = new Vue({

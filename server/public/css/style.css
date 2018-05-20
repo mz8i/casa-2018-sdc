@@ -2,6 +2,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
+    overflow:hidden;
   }
 
 .screen {
@@ -20,4 +21,16 @@ body {
 
 a {
   color: white;
+}
+
+.slide-up-enter-active, .slide-up-leave-active {
+    transition: 2s;
+}
+
+.slide-up-enter {
+  transform: translateY(100vh)
+}
+
+.slide-up-leave-to {
+  transform: translateY(-100vh);
 }
