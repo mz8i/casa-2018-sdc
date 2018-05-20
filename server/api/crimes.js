@@ -1,4 +1,5 @@
 var express = require('express');
+var mysql = require('mysql');
 var hexbin = require('d3-hexbin');
 
 var sqlResponse = require('./api-util.js').sqlResponse;

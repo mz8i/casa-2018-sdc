@@ -12,23 +12,26 @@
             </select>
             <br />
             <label><input v-model="normaliseGlobal" type="checkbox" @input="updateHexagons">Normalise globally</label>
-            {{tooltipText}}
+            <br />
+            <span v-html="tooltipText"></span>
         </div>
     </div>
 </template>
 
 <script>
-
-import { EventBus } from '../event-bus.js';
-import { HexagonLayer } from '@deck.gl/core';
 import Vue from 'vue';
+import vueSlider from 'vue-slider-component';
+import { HexagonLayer } from '@deck.gl/core';
 import wellknown from 'wellknown';
-import {getApi} from '../utils';
+import tag from '@turf/tag';
+import {point, feature, featureCollection} from '@turf/helpers';
 
-let startPoint = { center: [-87.6297, 41.8781], zoom: 15, pitch: 60, bearing: 0 };
+import {getApi, chicagoCenter} from '../utils';
+import { EventBus } from '../event-bus';
 
 let crimesCache = {};
 let communityAreas = null;
+let hexCommunityMatches = null;
 
 export default {
     name: 'OverviewScreen',
@@ -39,14 +42,17 @@ export default {
         crimeType: 'All',
         crimeTypes: [],
         tooltipText: '',
-        normaliseGlobal: true
+        normaliseGlobal: true,
+        active: false
     }),
     beforeRouteEnter: function(to, from, next) {
         next(vm => {
+            vm.active = true;
             vm.start();
         })
     },
     beforeRouteLeave: function(to, from, next) {
+        this.active = false;
         this.end();
         next();
     },
@@ -56,6 +62,7 @@ export default {
 
             this.updateHexagons();
             this.addChicagoOutline();
+            this.loadCommunityOutlines();
 
             EventBus.$emit('deck-on');
         },
@@ -83,18 +90,20 @@ export default {
                         }
                     };
 
-                    EventBus.$emit('add-layer', [outline, 'waterway-label']);
+                    if(this.active) EventBus.$emit('add-layer', [outline, 'waterway-label']);
                 });
         },
         removeChicagoOutline: function() {
             EventBus.$emit('remove-layer', 'chicago-outline');
         },
         loadCommunityOutlines: function() {
-            // fetch()
-            //     .then(res => res.json())
-            //     .then(data => {
-            //         crimes
-            //     });
+            getApi('/api/chicago/communities/wkt')
+                .then(data => {
+                    communityAreas = featureCollection(
+                        data.map(c => feature(wellknown(c.wkt), {
+                            community: c.community
+                        })));
+                });
         },
         loadCrimeTypes: function() {
             getApi('/api/crimes/types')
@@ -124,8 +133,12 @@ export default {
         clearCrimesDataCache: function() {
             crimesCache = {};
         },
-        getCommunityArea: function() {
-            return "area not implemented";
+        getCommunityArea: function(index) {
+            let community = "";
+            if(hexCommunityMatches){
+                community = hexCommunityMatches[String(index)];
+            }
+            return community;
         },
         _onYearSliderInput: function() {
             var year = this.year;
@@ -159,17 +172,38 @@ export default {
 
             if(this.normaliseGlobal) hexOptions.elevationDomain = [0, 2000];
 
-            let hexLayer = new HexagonLayer(hexOptions);
+            var hexLayer = new HexagonLayer(hexOptions);
 
-            EventBus.$emit('add-deck-layer', hexLayer);
+            Vue.nextTick(function() {
+                if(!hexLayer.state){
+                    console.log('Hex layer state is empty, skipping hexagon calculation');
+                    return;
+                }
+                
+                let pointCollection = featureCollection(
+                    hexLayer.state.hexagons.map(x => point(x.centroid, {index: x.index}))
+                );
+                console.log(pointCollection);
+                console.log(communityAreas);
+                let matched = tag(pointCollection, communityAreas, 'community', 'communityName');
+                console.log(matched);
+                hexCommunityMatches = {};
+
+                for(let match of matched.features){
+                    hexCommunityMatches[""+match.properties.index] = match.properties.communityName;
+                }
+            });
+
+            if(context.active) EventBus.$emit('add-deck-layer', hexLayer);
         },
         removeHexagons: function(){
             EventBus.$emit('remove-deck-layer', 'crimes-3d');
+            hexCommunityMatches = null;
         },
         getTooltipText: function(hoveredBar) {
             if(!hoveredBar) return "";
 
-            return `${this.getCommunityArea(hoveredBar.centroid)} <br /> Count: ${hoveredBar.points.length}`;
+            return `${this.getCommunityArea(hoveredBar.index)} \n Count: ${hoveredBar.points.length}`;
         },
         setTooltip: function(text){
             this.tooltipText = text;

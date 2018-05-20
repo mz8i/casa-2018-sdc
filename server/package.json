@@ -5,6 +5,8 @@
   "main": "app.js",
   "dependencies": {
     "@deck.gl/core": "^5.2.5",
+    "@turf/helpers": "^6.1.4",
+    "@turf/tag": "^5.1.5",
     "consolidate": "^0.15.1",
     "cors": "^2.8.4",
     "d3": "^5.4.0",
