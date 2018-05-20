@@ -1,6 +1,11 @@
 <template>
     <div id="app">
-        
+        <div id="navbar">
+            <router-link to="intro">Introduction</router-link>
+            <router-link to="overview">Overview</router-link>
+            <router-link to="time">Temporal</router-link>
+            <router-link to="analysis">Analysis</router-link>            
+        </div>
         <div id="map-container">
             <div id="map"></div>
             <canvas id="deck-canvas" ref='deck'></canvas>
@@ -88,11 +93,11 @@
                 viewState: initialViewState,
                 controller: MapController,
                 onViewportChange: viewState => {
+                    // this is to avoid an infinite event loop and at the same time allow map.flyTo sync
                     ignoreNextMove = true;
+                    
                     deckgl.setProps({viewState});
-                    // if(!viewState.stopPropagation) {
-                        mapObj.setProps({viewState});
-                    // }
+                    mapObj.setProps({viewState});
                     context.setViewState(viewState);
                 }
             });
@@ -184,6 +189,24 @@
 </script>
 
 <style scoped>
+    #navbar {
+        position: absolute;
+        z-index: 100;
+        top:0;
+        width: 100%;
+        height: 40px;
+    }
+
+    #navbar > * {
+        margin-left: 20px;
+        margin-right:20px;
+        float: right;
+    }
+
+    #navbar :after {
+        clear: right;
+    }
+
     #map-container {
         position: fixed;
         top: 0;

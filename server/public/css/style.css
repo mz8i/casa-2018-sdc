@@ -19,6 +19,10 @@ body {
   pointer-events: all;
 }
 
+.filler {
+  pointer-events: none;
+}
+
 a {
   color: white;
 }
