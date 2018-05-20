@@ -66,6 +66,8 @@
                 viewState: initialViewState
             });
 
+            var ignoreNextMove = false;
+
             var context = this;
             deckgl = new Deck({
                 canvas: 'deck-canvas',
@@ -74,12 +76,29 @@
                 viewState: initialViewState,
                 controller: MapController,
                 onViewportChange: viewState => {
+                    ignoreNextMove = true;
                     deckgl.setProps({viewState});
-                    if(!viewState.stopPropagation) {
+                    // if(!viewState.stopPropagation) {
                         mapObj.setProps({viewState});
-                    }
+                    // }
                     context.setViewState(viewState);
                 }
+            });
+
+            mapObj._map.on('move', e => {
+                if(!ignoreNextMove) {
+                    const {lng, lat} = e.target.getCenter();
+
+                    let viewState = {
+                        longitude: lng,
+                        latitude: lat,
+                        zoom: e.target.getZoom(),
+                        bearing: e.target.getBearing(),
+                        pitch: e.target.getPitch()
+                    }
+                    deckgl.setProps({viewState});
+                }
+                ignoreNextMove = false;
             });
 
             this.$refs.deck.addEventListener('contextmenu', e => e.preventDefault());
