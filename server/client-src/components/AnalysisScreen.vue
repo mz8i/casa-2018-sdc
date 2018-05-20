@@ -7,7 +7,8 @@
 
 <script>
 
-import parse from 'wellknown';
+import {feature, featureCollection} from '@turf/helpers';
+import wellknown from 'wellknown';
 
 import { EventBus } from '../event-bus.js';
 
@@ -18,38 +19,36 @@ export default {
     name: 'AnalysisScreen',
     beforeRouteEnter: function(to, from, next) {
         next(vm => {
+            this.active = true;
             vm.start();
         })
     },
     beforeRouteLeave: function(to, from, next) {
         this.end();
+        this.active = false;
         next();
     },
-    mounted: function() {
-        console.log('Analysis screen mounted');
-    },
+    data: () => ({
+        active: false
+    }),
     methods: {
         start: function() {
-            EventBus.$emit('fly-to', startPoint);
-
-            fetch('/api/beats')
-                .then(response => response.json())
+            this.loadBeats();
+        },
+        end: function() {
+            this.removeBeats();
+        },
+        addBeats: function() {
+            getApi('/api/beats')
                 .then(data => {
-                    //let dataGeojson = GeoJSON.parse(data, {Point: ['Latitude', 'Longitude']});
+                    let geojson = featureCollection(
+                        data.map(x => feature(wellknown(x.wkt), {
+                            beat_number: x.beat_number,
+                            population: x.population
+                        }))
+                    );
 
-                    let dataGeojson = {
-                        type: 'FeatureCollection',
-                        features: data.map(function(x){
-                            return {
-                                type: 'Feature',
-                                geometry: parse(x.wkt),
-                                properties: {
-                                    beat_number: x.beat_num,
-                                    population: x['TOTAL POPULATION']
-                                }
-                            }
-                        })
-                    };
+                    let geojsonLayer = new 
 
                     EventBus.$emit('add-source', {
                         sourceName: 'beats',
@@ -60,11 +59,11 @@ export default {
                     });
 
                     EventBus.$emit('add-layer', [{
-                        "id": 'beats-shape',
-                        "type": 'fill',
-                        "source": 'beats',
-                        "paint": {
-                            'fill-color': //'#e00',
+                        id: 'beats-shape',
+                        type: 'fill',
+                        source: 'beats',
+                        paint: {
+                            'fill-color':
                             [
                                 'interpolate',
                                 ['linear'],
@@ -77,17 +76,17 @@ export default {
                     }, 'waterway-label']);
 
                     EventBus.$emit('add-layer', [{
-                        "id": 'beats-outline',
-                        "type": 'line',
-                        "source": 'beats',
-                        "paint": {
+                        id: 'beats-outline',
+                        type: 'line',
+                        source: 'beats',
+                        paint: {
                             'line-color': '#222',
                             'line-width': 2 
                         }
                     }, 'waterway-label']);
                 });
         },
-        end: function() {
+        removeBeats: function() {
             EventBus.$emit('remove-layer', 'beats-shape');
             EventBus.$emit('remove-layer', 'beats-outline');
             EventBus.$emit('remove-source', 'beats');
