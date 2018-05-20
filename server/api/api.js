@@ -62,5 +62,25 @@ api.get('/stops', function (req, res) {
 
 });
 
+//  API EndPoint to get data from 311 calls aggregated by beat 
+api.get('/calls/beats', function (req, res) {
+
+        // SQL Statement to run
+        var sql = "SELECT beat_num, Type from calls311 group by beat_num, Type" ;
+
+        sqlResponse(sql, res);
+   
+});
+
+//  API EndPoint to get data from transport stops aggregated by Beat
+api.get('/stops/beats', function (req, res) {
+        // SQL Statement to run
+        var sql = "SELECT beat_num, stop_type, count(SYSTEMSTOP) FROM (SELECT SYSTEMSTOP, beat_num, 'Bus' as stop_type from bus_beat UNION ALL SELECT STOP_ID, beat_num, 'Rail' as stop_type from rail_beat) agg_beats GROUP BY beat_num, stop_type";
+
+        sqlResponse(sql, res);
+
+});
+
+
 
 module.exports = api;
