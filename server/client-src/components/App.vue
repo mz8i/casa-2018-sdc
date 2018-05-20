@@ -13,7 +13,7 @@
             <button @click="copyCameraDebug">Copy</button>
         </div>
 
-        <transition name="slide-up">
+        <transition :name="transitionName">
             <router-view ref="views"></router-view>
         </transition>
     </div>
@@ -33,6 +33,8 @@
         pitch: 0
     };
 
+    let routeOrder = ['/intro', '/overview', '/time', '/analysis'];
+
     let mapObj = null;
     let deckgl = null;
 
@@ -51,11 +53,21 @@
             EventBus.$on('remove-deck-layer', this.removeDeckLayer);
         },
         data: () => ({
-            viewState: {}
+            viewState: {},
+            transitionName: 'slide-up'
         }),
         computed: {
             viewStateString: function() {
                 return JSON.stringify(this.viewState, null, 2);
+            }
+        },
+        watch: {
+            '$route' (to, from) {
+                console.log(from, to);
+                let toOrder = routeOrder.indexOf(to.path);
+                let fromOrder = routeOrder.indexOf(from.path);
+                console.log(fromOrder, toOrder);
+                this.transitionName = fromOrder < toOrder ? 'slide-up' : 'slide-down';
             }
         },
         mounted: function() {

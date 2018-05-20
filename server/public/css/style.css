@@ -24,7 +24,7 @@ a {
 }
 
 .slide-up-enter-active, .slide-up-leave-active {
-    transition: 2s;
+    transition: 1s;
 }
 
 .slide-up-enter {
@@ -33,4 +33,16 @@ a {
 
 .slide-up-leave-to {
   transform: translateY(-100vh);
+}
+
+.slide-down-enter-active, .slide-down-leave-active {
+  transition: 1s;
+}
+
+.slide-down-enter {
+  transform: translateY(-100vh);
+}
+
+.slide-down-leave-to {
+  transform: translateY(100vh);
 }
