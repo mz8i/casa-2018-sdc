@@ -27951,7 +27951,9 @@ var deckLayers = {};
             return e.preventDefault();
         });
 
-        _event_bus__WEBPACK_IMPORTED_MODULE_2__["EventBus"].$emit('map-loaded');
+        mapObj._map.on('style.load', function () {
+            return _event_bus__WEBPACK_IMPORTED_MODULE_2__["EventBus"].$emit('map-loaded');
+        });
     },
     methods: {
         setViewState: function setViewState(viewState) {
@@ -28110,11 +28112,6 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
 
 
 
@@ -28125,11 +28122,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-var startPoint = { center: [-87.6297, 41.8781], zoom: 15, pitch: 60, bearing: 0 };
 
 var crimesCache = {};
 var communityAreas = null;
+var hexCommunityMatches = null;
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     name: 'OverviewScreen',
@@ -28141,27 +28137,28 @@ var communityAreas = null;
             crimeType: 'All',
             crimeTypes: [],
             tooltipText: '',
-            normaliseGlobal: true
+            normaliseGlobal: true,
+            active: false
         };
     },
     beforeRouteEnter: function beforeRouteEnter(to, from, next) {
         next(function (vm) {
+            vm.active = true;
             vm.start();
         });
     },
     beforeRouteLeave: function beforeRouteLeave(to, from, next) {
+        this.active = false;
         this.end();
         next();
     },
     methods: {
-        testFly: function testFly() {
-            _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('fly-to', { center: [-87.9074, 41.9742], zoom: 13, pitch: 0, bearing: 0, speed: 0.2 });
-        },
         start: function start() {
             this.loadCrimeTypes();
 
             this.updateHexagons();
             this.addChicagoOutline();
+            this.loadCommunityOutlines();
 
             _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('deck-on');
         },
@@ -28171,6 +28168,8 @@ var communityAreas = null;
             this.removeChicagoOutline();
         },
         addChicagoOutline: function addChicagoOutline() {
+            var _this = this;
+
             Object(_utils__WEBPACK_IMPORTED_MODULE_6__["getApi"])('/api/chicago/wkt').then(function (data) {
                 console.log('wkt', data);
                 var geojson = wellknown__WEBPACK_IMPORTED_MODULE_3___default()(data[0].wkt);
@@ -28188,32 +28187,26 @@ var communityAreas = null;
                     }
                 };
 
-                _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('add-layer', [outline, 'waterway-label']);
+                if (_this.active) _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('add-layer', [outline, 'waterway-label']);
             });
         },
         removeChicagoOutline: function removeChicagoOutline() {
             _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('remove-layer', 'chicago-outline');
         },
         loadCommunityOutlines: function loadCommunityOutlines() {
-            loadApi('/api/chicago/communities/wkt').then(function (data) {
-                communityAreas = data.map(function (c) {
-                    return {
-                        community: c.community,
-                        geojson: wellknown__WEBPACK_IMPORTED_MODULE_3___default()(c.wkt)
-                    };
-                });
+            Object(_utils__WEBPACK_IMPORTED_MODULE_6__["getApi"])('/api/chicago/communities/wkt').then(function (data) {
+                communityAreas = Object(_turf_helpers__WEBPACK_IMPORTED_MODULE_5__["featureCollection"])(data.map(function (c) {
+                    return Object(_turf_helpers__WEBPACK_IMPORTED_MODULE_5__["feature"])(wellknown__WEBPACK_IMPORTED_MODULE_3___default()(c.wkt), {
+                        community: c.community
+                    });
+                }));
             });
-            // fetch()
-            //     .then(res => res.json())
-            //     .then(data => {
-            //         crimes
-            //     });
         },
         loadCrimeTypes: function loadCrimeTypes() {
-            var _this = this;
+            var _this2 = this;
 
             Object(_utils__WEBPACK_IMPORTED_MODULE_6__["getApi"])('/api/crimes/types').then(function (data) {
-                _this.crimeTypes = data;
+                _this2.crimeTypes = data;
                 console.log('crime types', data);
                 console.log('Updated crime types');
             });
@@ -28237,15 +28230,19 @@ var communityAreas = null;
         clearCrimesDataCache: function clearCrimesDataCache() {
             crimesCache = {};
         },
-        getCommunityArea: function getCommunityArea() {
-            return "area not implemented";
+        getCommunityArea: function getCommunityArea(index) {
+            var community = "";
+            if (hexCommunityMatches) {
+                community = hexCommunityMatches[String(index)];
+            }
+            return community;
         },
         _onYearSliderInput: function _onYearSliderInput() {
-            var _this2 = this;
+            var _this3 = this;
 
             var year = this.year;
             setTimeout(function () {
-                if (_this2.year == year) _this2.updateHexagons();
+                if (_this3.year == year) _this3.updateHexagons();
             }, 1000);
         },
         updateHexagons: function updateHexagons() {
@@ -28282,22 +28279,57 @@ var communityAreas = null;
 
             var hexLayer = new _deck_gl_core__WEBPACK_IMPORTED_MODULE_2__["HexagonLayer"](hexOptions);
 
-            console.log(hexLayer);
+            vue__WEBPACK_IMPORTED_MODULE_0__["default"].nextTick(function () {
+                if (!hexLayer.state) {
+                    console.log('Hex layer state is empty, skipping hexagon calculation');
+                    return;
+                }
 
-            // let centroids = hexLayer.state.hexagons.map(x => x.centroid);
-            // let pointCollection = featureCollection(
-            //     centroids.map(x => feature(x.geojson))
-            // );
+                var pointCollection = Object(_turf_helpers__WEBPACK_IMPORTED_MODULE_5__["featureCollection"])(hexLayer.state.hexagons.map(function (x) {
+                    return Object(_turf_helpers__WEBPACK_IMPORTED_MODULE_5__["point"])(x.centroid, { index: x.index });
+                }));
+                console.log(pointCollection);
+                console.log(communityAreas);
+                var matched = Object(_turf_tag__WEBPACK_IMPORTED_MODULE_4__["default"])(pointCollection, communityAreas, 'community', 'communityName');
+                console.log(matched);
+                hexCommunityMatches = {};
 
-            _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('add-deck-layer', hexLayer);
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                    for (var _iterator = matched.features[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var match = _step.value;
+
+                        hexCommunityMatches["" + match.properties.index] = match.properties.communityName;
+                    }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator.return) {
+                            _iterator.return();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+            });
+
+            if (context.active) _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('add-deck-layer', hexLayer);
         },
         removeHexagons: function removeHexagons() {
             _event_bus__WEBPACK_IMPORTED_MODULE_7__["EventBus"].$emit('remove-deck-layer', 'crimes-3d');
+            hexCommunityMatches = null;
         },
         getTooltipText: function getTooltipText(hoveredBar) {
             if (!hoveredBar) return "";
 
-            return this.getCommunityArea(hoveredBar.centroid) + ' <br /> Count: ' + hoveredBar.points.length;
+            return this.getCommunityArea(hoveredBar.index) + ' \n Count: ' + hoveredBar.points.length;
         },
         setTooltip: function setTooltip(text) {
             this.tooltipText = text;
@@ -59988,131 +60020,123 @@ var render = function() {
       _vm._v(" "),
       _c("router-link", { attrs: { to: "time" } }, [_vm._v("Go to Time")]),
       _vm._v(" "),
-      _c(
-        "div",
-        { staticClass: "screen-control" },
-        [
-          _c("transition", [
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.year,
-                  expression: "year"
-                }
-              ],
-              attrs: {
-                type: "range",
-                min: _vm.minYear,
-                max: _vm.maxYear,
-                step: "1"
-              },
-              domProps: { value: _vm.year },
-              on: {
-                input: _vm._onYearSliderInput,
-                __r: function($event) {
-                  _vm.year = $event.target.value
-                }
-              }
-            }),
-            _vm._v("\n        " + _vm._s(_vm.year) + "\n        ")
-          ]),
-          _vm._v(" "),
-          _c("br"),
-          _vm._v(" "),
-          _c(
-            "select",
+      _c("div", { staticClass: "screen-control" }, [
+        _c("input", {
+          directives: [
             {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.crimeType,
-                  expression: "crimeType"
-                }
-              ],
-              on: {
-                input: _vm.updateHexagons,
-                change: function($event) {
-                  var $$selectedVal = Array.prototype.filter
-                    .call($event.target.options, function(o) {
-                      return o.selected
-                    })
-                    .map(function(o) {
-                      var val = "_value" in o ? o._value : o.value
-                      return val
-                    })
-                  _vm.crimeType = $event.target.multiple
-                    ? $$selectedVal
-                    : $$selectedVal[0]
-                }
+              name: "model",
+              rawName: "v-model",
+              value: _vm.year,
+              expression: "year"
+            }
+          ],
+          attrs: {
+            type: "range",
+            min: _vm.minYear,
+            max: _vm.maxYear,
+            step: "1"
+          },
+          domProps: { value: _vm.year },
+          on: {
+            input: _vm._onYearSliderInput,
+            __r: function($event) {
+              _vm.year = $event.target.value
+            }
+          }
+        }),
+        _vm._v("\n        " + _vm._s(_vm.year) + "\n        "),
+        _c("br"),
+        _vm._v(" "),
+        _c(
+          "select",
+          {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.crimeType,
+                expression: "crimeType"
               }
-            },
-            [
-              _c("option", { attrs: { value: "All" } }, [_vm._v("All")]),
-              _vm._v(" "),
-              _vm._l(_vm.crimeTypes, function(ct) {
-                return _c(
-                  "option",
-                  { key: ct.code, domProps: { value: ct.code } },
-                  [_vm._v(" " + _vm._s(ct.type) + " ")]
-                )
-              })
             ],
-            2
-          ),
-          _vm._v(" "),
-          _c("br"),
-          _vm._v(" "),
-          _c("label", [
-            _c("input", {
-              directives: [
-                {
-                  name: "model",
-                  rawName: "v-model",
-                  value: _vm.normaliseGlobal,
-                  expression: "normaliseGlobal"
-                }
-              ],
-              attrs: { type: "checkbox" },
-              domProps: {
-                checked: Array.isArray(_vm.normaliseGlobal)
-                  ? _vm._i(_vm.normaliseGlobal, null) > -1
-                  : _vm.normaliseGlobal
-              },
-              on: {
-                input: _vm.updateHexagons,
-                change: function($event) {
-                  var $$a = _vm.normaliseGlobal,
-                    $$el = $event.target,
-                    $$c = $$el.checked ? true : false
-                  if (Array.isArray($$a)) {
-                    var $$v = null,
-                      $$i = _vm._i($$a, $$v)
-                    if ($$el.checked) {
-                      $$i < 0 && (_vm.normaliseGlobal = $$a.concat([$$v]))
-                    } else {
-                      $$i > -1 &&
-                        (_vm.normaliseGlobal = $$a
-                          .slice(0, $$i)
-                          .concat($$a.slice($$i + 1)))
-                    }
+            on: {
+              input: _vm.updateHexagons,
+              change: function($event) {
+                var $$selectedVal = Array.prototype.filter
+                  .call($event.target.options, function(o) {
+                    return o.selected
+                  })
+                  .map(function(o) {
+                    var val = "_value" in o ? o._value : o.value
+                    return val
+                  })
+                _vm.crimeType = $event.target.multiple
+                  ? $$selectedVal
+                  : $$selectedVal[0]
+              }
+            }
+          },
+          [
+            _c("option", { attrs: { value: "All" } }, [_vm._v("All")]),
+            _vm._v(" "),
+            _vm._l(_vm.crimeTypes, function(ct) {
+              return _c(
+                "option",
+                { key: ct.code, domProps: { value: ct.code } },
+                [_vm._v(" " + _vm._s(ct.type) + " ")]
+              )
+            })
+          ],
+          2
+        ),
+        _vm._v(" "),
+        _c("br"),
+        _vm._v(" "),
+        _c("label", [
+          _c("input", {
+            directives: [
+              {
+                name: "model",
+                rawName: "v-model",
+                value: _vm.normaliseGlobal,
+                expression: "normaliseGlobal"
+              }
+            ],
+            attrs: { type: "checkbox" },
+            domProps: {
+              checked: Array.isArray(_vm.normaliseGlobal)
+                ? _vm._i(_vm.normaliseGlobal, null) > -1
+                : _vm.normaliseGlobal
+            },
+            on: {
+              input: _vm.updateHexagons,
+              change: function($event) {
+                var $$a = _vm.normaliseGlobal,
+                  $$el = $event.target,
+                  $$c = $$el.checked ? true : false
+                if (Array.isArray($$a)) {
+                  var $$v = null,
+                    $$i = _vm._i($$a, $$v)
+                  if ($$el.checked) {
+                    $$i < 0 && (_vm.normaliseGlobal = $$a.concat([$$v]))
                   } else {
-                    _vm.normaliseGlobal = $$c
+                    $$i > -1 &&
+                      (_vm.normaliseGlobal = $$a
+                        .slice(0, $$i)
+                        .concat($$a.slice($$i + 1)))
                   }
+                } else {
+                  _vm.normaliseGlobal = $$c
                 }
               }
-            }),
-            _vm._v("Normalise globally")
-          ]),
-          _vm._v("\n        " + _vm._s(_vm.tooltipText) + "\n        "),
-          _c("br"),
-          _vm._v(" "),
-          _c("button", { on: { click: _vm.testFly } }, [_vm._v("Test fly")])
-        ],
-        1
-      )
+            }
+          }),
+          _vm._v("Normalise globally")
+        ]),
+        _vm._v(" "),
+        _c("br"),
+        _vm._v(" "),
+        _c("span", { domProps: { innerHTML: _vm._s(_vm.tooltipText) } })
+      ])
     ],
     1
   )

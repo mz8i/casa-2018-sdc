@@ -115,7 +115,7 @@
 
             this.$refs.deck.addEventListener('contextmenu', e => e.preventDefault());
 
-            EventBus.$emit('map-loaded');
+            mapObj._map.on('style.load', () => EventBus.$emit('map-loaded'));
         },
         methods: {
             setViewState: function(viewState) {
