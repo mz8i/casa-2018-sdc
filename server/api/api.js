@@ -31,4 +31,36 @@ api.get('/chicago/communities/wkt', function(req, res){
         sqlResponse("SELECT community, geometry AS wkt FROM ch_community", res);
 });
 
+
+//  API EndPoint to get data from 311 calls 
+api.get('/calls', function (req, res) {
+
+        // If all the variables are provided connect to the database
+        if (req.query.beat) {
+
+                // Parse the values from the URL into numbers for the query
+                var beat = req.query.beat;
+
+                // SQL Statement to run
+                var sql = "SELECT calls311.Lat, calls311.Lon, calls311.RealCreationDate, calls311.RespTime FROM calls311 WHERE beat_num=" + mysql.escape(beat) ;
+                if (beat) sql += " and beat_num = " + mysql.escape(type);
+
+                sqlResponse(sql, res);
+        } else {
+                // If all the URL variables are not passed send an empty string to the user
+                res.send("");
+        }
+});
+
+
+//  API EndPoint to get data from transport stops 
+api.get('/stops', function (req, res) {
+        // SQL Statement to run
+        var sql = "SELECT SYSTEMSTOP, stop_id, stop_lat, stop_lon, beat_num, stop_type, stop_name FROM (SELECT SYSTEMSTOP, beat_num, 'Bus' as stop_type from bus_beat UNION ALL SELECT STOP_ID, beat_num, 'Rail' as stop_type from rail_beat) stop_beats INNER JOIN stops ON SYSTEMSTOP = stops.stop_id";
+        
+        sqlResponse(sql, res);
+
+});
+
+
 module.exports = api;
