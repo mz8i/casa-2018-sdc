@@ -8,9 +8,6 @@ Created on Fri May 18 21:18:02 2018
 import pandas as pd
 import os
 import numpy as np
-import statistics
-import datetime as dt
-from matplotlib import pyplot as plt
 import geopandas as gpd
 from geopandas import GeoDataFrame
 from shapely.geometry import Point
@@ -80,8 +77,39 @@ beat_alley['Time_Alleys'] = alley_2017['RespTime'].groupby(alley_2017['beat_num'
 beat_all_out['Time_All_Out'] = all_lights_2017['RespTime'].groupby(all_lights_2017['beat_num']).mean()
 beat_one_out['Time_One_Out'] = one_light_2017['RespTime'].groupby(one_light_2017['beat_num']).mean()
 
-#Combine everithing into a DataFrame
+#Combine everything into a DataFrame
 beat_calls = pd.concat([beat_alley, beat_all_out,beat_one_out], axis=1)
 beat_calls.to_csv('beat_calls.csv')
 
+#################Convert file and upload it to MySQL
+# create the connection string to the MySQL database
+################## THIS PART IS ONLY FOR THE CONNECTION TO WORK THROUGH SSH ###########################
+from sshtunnel import SSHTunnelForwarder
+server =  SSHTunnelForwarder(
+     ('dev.spatialdatacapture.org', 22),
+     ssh_password=os.environ.get('DB_PASSWORD'),
+     ssh_username=os.environ.get('DB_USER'),
+     remote_bind_address=('127.0.0.1', 3306))
+server.start()
+
+print(server.local_bind_port)
+engine = create_engine('mysql+pymysql://ucfnmbz:sadohazije@127.0.0.1:%s/ucfnmbz' % server.local_bind_port)
+############################################################################################################
+#engine = create_engine('mysql+pymysql://ucfnmbz:sadohazije@dev.spatialdatacapture.org:3306/ucfnmbz')
+
+# Create SQL connection engine
+conn = engine.raw_connection()
+
+# Function to generate WKB hex
+def wkb_hexer(line):
+    return line.wkt
+
+#Convert geometry column in GeoDataFrame to hex
+#Then the GeoDataFrame is just a regular DataFrames
+id_calls311_2017['geometry'] = id_calls311_2017['geometry'].apply(lambda x: x.wkt)
+
+# Connect to database and export data
+with engine.connect() as conn, conn.begin():
+    id_calls311_2017.to_sql('calls311', con=conn, 
+               if_exists='append', index=False)
 

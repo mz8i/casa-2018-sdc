@@ -4,17 +4,23 @@ Created on Wed May 16 16:43:14 2018
 
 @author: josen
 """
-
+import os
 import geopandas as gpd
 import pandas as pd
 from geopandas import GeoDataFrame
 from shapely.geometry import Point
+from sqlalchemy import create_engine
+
+#First you need to change your current directory to the analysis directory in your computer
+#os.chdir("C:/.../casa-2018-sdc/analysis")
+analysis_dir = os.getcwd()
+data_dir = os.path.join(analysis_dir, 'data')
 
 #Read shapefiles
-ch_blocks = gpd.read_file('C:/Users/josen/Documents/2nd Term UCL/Spatial Data Capture/Final Project/Blocks.shp')
-ch_pbeats = gpd.read_file('C:/Users/josen/Documents/2nd Term UCL/Spatial Data Capture/Final Project/BeatsPolice.shp')
+ch_blocks = gpd.read_file(os.path.join(data_dir, 'Blocks.shp'))
+ch_pbeats = gpd.read_file(os.path.join(data_dir, 'BeatsPolice.shp'))
 #Read CSV files
-ch_pop = pd.read_csv('C:/Users/josen/Documents/2nd Term UCL/Spatial Data Capture/Final Project/Population_by_2010_Census_Block1.csv')
+ch_pop = pd.read_csv(os.path.join(data_dir, "Population_by_2010_Census_Block1.csv"))
 ch_pop=ch_pop.drop(0)
 ch_crime = pd.read_csv('C:/Users/josen/Documents/2nd Term UCL/Spatial Data Capture/Final Project/export_2017.csv')
 
@@ -39,21 +45,44 @@ block_with_beat = block_with_beat.set_geometry('geometry')
 
 #Aggregate population per Beat
 beat_pop = block_with_beat.dissolve(by='beat_num', aggfunc='sum')
+beat_pop['beat_num'] = beat_pop.index
+
+#################Convert file and upload it to MySQL
+# create the connection string to the MySQL database
+
+
+################## THIS PART IS ONLY FOR THE CONNECTION TO WORK THROUGH SSH ###########################
+from sshtunnel import SSHTunnelForwarder
+server =  SSHTunnelForwarder(
+     ('dev.spatialdatacapture.org', 22),
+     ssh_password=os.environ.get('DB_PASSWORD'),
+     ssh_username=os.environ.get('DB_USER'),
+     remote_bind_address=('127.0.0.1', 3306))
+server.start()
+
+print(server.local_bind_port)
+engine = create_engine('mysql+pymysql://ucfnmbz:sadohazije@127.0.0.1:%s/ucfnmbz' % server.local_bind_port)
+############################################################################################################
+#engine = create_engine('mysql+pymysql://ucfnmbz:sadohazije@dev.spatialdatacapture.org:3306/ucfnmbz')
+
+# Create SQL connection engine
+conn = engine.raw_connection()
+
+# Function to generate WKB hex
+def wkb_hexer(line):
+    return line.wkt
+
+#Convert geometry column in GeoDataFrame to hex
+#Then the GeoDataFrames are just regular DataFrames
+beat_pop['geometry'] = beat_pop['geometry'].apply(lambda x: x.wkt)
+
+# Connect to database and export data
+with engine.connect() as conn, conn.begin():
+    beat_pop.to_sql('beat_population', con=conn, 
+               if_exists='append', index=False)
 
 
 
-
-
-
-#Produce Crime GeoDataFrame
-geometry = [Point(xy) for xy in zip(ch_crime.Lon, ch_crime.Lat)]
-ch_crime = ch_crime.drop(['Lon', 'Lat'], axis=1)
-crs = {'init': 'epsg:4326'}
-crimes_gdf = GeoDataFrame(ch_crime, crs=crs, geometry=geometry)
-
-beat_pop = beat_pop.rename(columns={'index_right': 'index'})
-
-beat_crime = gpd.sjoin(beat_pop, crimes_gdf, how="inner", op='intersects')
 
 
 

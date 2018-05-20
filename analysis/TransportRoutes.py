@@ -8,13 +8,10 @@ Created on Sat May 19 16:50:56 2018
 import pandas as pd
 import os
 import numpy as np
-import statistics
-import datetime as dt
-from matplotlib import pyplot as plt
 import geopandas as gpd
-from geopandas import GeoDataFrame
-from shapely.geometry import Point
 from sqlalchemy import create_engine
+
+
 
 #First you need to change your current directory to the analysis directory in your computer
 #os.chdir("C:/.../casa-2018-sdc/analysis")
@@ -52,6 +49,7 @@ bus = bus.rename(columns={'Total': 'T_Services'})
 #Spatial join to identify which point belongs to each Beat
 id_rail = gpd.sjoin(ch_pbeats, rail, how="inner", op='intersects')
 id_bus = gpd.sjoin(ch_pbeats, bus, how="inner", op='intersects')
+
 #Group by beat number to get the amount of stations per beat
 beat_rail = id_rail.STATION_ID.groupby(id_rail['beat_num']).count().to_frame(name='Rail_Stations')
 beat_bus = id_bus.WARD.groupby(id_bus['beat_num']).count().to_frame(name='bus_Stations')
@@ -62,7 +60,39 @@ beat_bus['Routes_Bus'] = id_bus['T_Services'].groupby(id_bus['beat_num']).mean()
 beat_transport = pd.concat([beat_bus, beat_rail], axis=1)
 beat_transport.to_csv('beat_transport.csv')
 
+#Import file to match the correspondent station Codes for Rail system with the data from GTFS
+rail_codes = pd.read_csv(os.path.join(data_dir, "CTA_-_System_Information_-_List_of__L__Stops_-_Map.csv")) 
+rail_codes['STATION_CODE'] = rail_codes.MAP_ID.astype(str).str[-4:].astype(np.int64)
+rail_codes_join = pd.merge(rail_codes, id_rail, left_on='STATION_CODE',right_on= 'STATION_ID')
+rail_codes_join = rail_codes_join.drop(['ADA_x','RED','BLUE','G','BRN','P','Pexp','Y', 'Pnk','O','district', 'sector','geometry','index_right','ADA_y','PKNRD'], 1)
 
-rail.plot()
+#################Convert file and upload it to MySQL
+# create the connection string to the MySQL database
 
+################## THIS PART IS ONLY FOR THE CONNECTION TO WORK THROUGH SSH ###########################
+from sshtunnel import SSHTunnelForwarder
+server =  SSHTunnelForwarder(
+     ('dev.spatialdatacapture.org', 22),
+     ssh_password=os.environ.get('DB_PASSWORD'),
+     ssh_username=os.environ.get('DB_USER'),
+     remote_bind_address=('127.0.0.1', 3306))
+server.start()
+
+print(server.local_bind_port)
+engine = create_engine('mysql+pymysql://ucfnmbz:sadohazije@127.0.0.1:%s/ucfnmbz' % server.local_bind_port)
+############################################################################################################
+#engine = create_engine('mysql+pymysql://ucfnmbz:sadohazije@dev.spatialdatacapture.org:3306/ucfnmbz')
+
+# Create SQL connection engine
+conn = engine.raw_connection()
+
+#Drop geometry column to turn the file into a regular Geodataframe
+point_bus=id_bus.drop(['geometry'],1) 
+  
+# Connect to database and export data
+with engine.connect() as conn, conn.begin():
+    rail_codes_join.to_sql('rail_beat', con=conn, 
+               if_exists='append', index=False)
+    point_bus.to_sql('bus_beat', con=conn, 
+               if_exists='append', index=False)
 
