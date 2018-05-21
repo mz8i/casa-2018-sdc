@@ -9,13 +9,13 @@ import IntroScreen from './components/IntroScreen.vue';
 import OverviewScreen from './components/OverviewScreen.vue';
 import TimeScreen from './components/TimeScreen.vue';
 import AnalysisScreen from './components/AnalysisScreen.vue';
-import {EventBus} from './event-bus.js';
+import {EventBus} from './event-bus';
 
 Vue.use(VueRouter);
 Vue.use(BootstrapVue);
 
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 const router = new VueRouter({
     routes: [

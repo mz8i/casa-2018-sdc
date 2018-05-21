@@ -1,10 +1,15 @@
 var express = require('express');
+var cors = require('cors');
 var mysql = require('mysql');
 var hexbin = require('d3-hexbin');
 
 var sqlResponse = require('./api-util.js').sqlResponse;
 
 var api = express();
+
+api.use(cors({
+    allowedHeaders: ['X-Requested-With']
+}));
 
 api.get('/crimes/types', function (req, res) {
     var sql = "SELECT FBIType as code, Description as type FROM FBICrimeTypes";

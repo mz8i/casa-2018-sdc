@@ -38,10 +38,10 @@ export default {
         start: function() {
             this.addBeats();
             this.addTransport();
-            EventBus.$emit('deck-on');
+            // EventBus.$emit('deck-on');
         },
         end: function() {
-            EventBus.$emit('deck-off');
+            // EventBus.$emit('deck-off');
             this.removeBeats();
             this.removeTransport();
         },
@@ -133,7 +133,7 @@ export default {
             // EventBus.$emit('remove-source', 'beats');
         },
         addTransport: function() {
-            getApi('/api/stops')
+            getApi('/api/stops?type=Rail')
                 .then(data => {
                     // let geo = featureCollection(data.map(x => point([x.lon, x.lat], {
                     //     beat: x.beat,

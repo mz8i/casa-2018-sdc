@@ -64,10 +64,10 @@ export default {
             this.addChicagoOutline();
             this.loadCommunityOutlines();
 
-            EventBus.$emit('deck-on');
+            // EventBus.$emit('deck-on');
         },
         end: function() {
-            EventBus.$emit('deck-off');
+            // EventBus.$emit('deck-off');
             this.removeHexagons();
             this.removeChicagoOutline();
         },

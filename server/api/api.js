@@ -1,5 +1,4 @@
 var express = require('express');
-var bodyParser = require('body-parser');
 var cors = require('cors');
 
 var mysql = require('mysql');
@@ -9,8 +8,6 @@ var crimes = require('./crimes.js');
 
 var api = express();
 
-api.use(bodyParser.json());
-api.use(bodyParser.urlencoded());
 api.use(cors({
         allowedHeaders: ['X-Requested-With']
 }));
@@ -57,6 +54,10 @@ api.get('/calls', function (req, res) {
 api.get('/stops', function (req, res) {
         // SQL Statement to run
         var sql = "SELECT stop_id, stop_lat as lat, stop_lon as lon, beat_num as beat, stop_type as type, stop_name as name FROM (SELECT SYSTEMSTOP, beat_num, 'Bus' as stop_type from bus_beat UNION ALL SELECT STOP_ID, beat_num, 'Rail' as stop_type from rail_beat) stop_beats INNER JOIN stops ON SYSTEMSTOP = stops.stop_id";
+
+        if(req.query.type){
+                sql += " WHERE stop_beats.stop_type = " + mysql.escape(req.query.type);
+        }
         
         sqlResponse(sql, res);
 
@@ -66,7 +67,7 @@ api.get('/stops', function (req, res) {
 api.get('/calls/beats', function (req, res) {
 
         // SQL Statement to run
-        var sql = "SELECT beat_num, Type from calls311 group by beat_num, Type" ;
+        var sql = "SELECT beat_num, Type, count(*) from calls311 group by beat_num, Type" ;
 
         sqlResponse(sql, res);
    
