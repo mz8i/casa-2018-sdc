@@ -56,7 +56,7 @@ api.get('/calls', function (req, res) {
 //  API EndPoint to get data from transport stops 
 api.get('/stops', function (req, res) {
         // SQL Statement to run
-        var sql = "SELECT SYSTEMSTOP, stop_id, stop_lat, stop_lon, beat_num, stop_type, stop_name FROM (SELECT SYSTEMSTOP, beat_num, 'Bus' as stop_type from bus_beat UNION ALL SELECT STOP_ID, beat_num, 'Rail' as stop_type from rail_beat) stop_beats INNER JOIN stops ON SYSTEMSTOP = stops.stop_id";
+        var sql = "SELECT stop_id, stop_lat as lat, stop_lon as lon, beat_num as beat, stop_type as type, stop_name as name FROM (SELECT SYSTEMSTOP, beat_num, 'Bus' as stop_type from bus_beat UNION ALL SELECT STOP_ID, beat_num, 'Rail' as stop_type from rail_beat) stop_beats INNER JOIN stops ON SYSTEMSTOP = stops.stop_id";
         
         sqlResponse(sql, res);
 

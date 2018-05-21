@@ -68,10 +68,8 @@
         },
         watch: {
             '$route' (to, from) {
-                console.log(from, to);
                 let toOrder = routeOrder.indexOf(to.path);
                 let fromOrder = routeOrder.indexOf(from.path);
-                console.log(fromOrder, toOrder);
                 this.transitionName = fromOrder < toOrder ? 'slide-up' : 'slide-down';
             }
         },
@@ -140,23 +138,27 @@
             },
             addSource: function(sourceParams) {
                 const {sourceName, sourceOptions} = sourceParams;
-                console.log('Adding source to map');
-
                 mapObj._map.addSource(sourceName, sourceOptions);
             },
             addLayer: function(layerParams) {
                 const [layerOptions, beforeLayer] = layerParams;
-                console.log('Adding layer to map');
-                console.log(layerOptions);
                 mapObj._map.addLayer(layerOptions, beforeLayer);
             },
 
             removeLayer: function(id) {
-                mapObj._map.removeLayer(id);
+                try {
+                    mapObj._map.removeLayer(id);
+                } catch(err) {
+                    console.error(`The layer '${id}' does not exist.`);
+                }
             },
             
             removeSource: function(id) {
-                mapObj._map.removeSource(id);
+                try{
+                    mapObj._map.removeSource(id);
+                } catch(err) {
+                    console.error(`The source '${id}' does not exist.`)
+                }
             },
 
             deckOn: function(){

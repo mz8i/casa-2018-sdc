@@ -26,9 +26,9 @@ const router = new VueRouter({
     ]
 });
 
-EventBus.$on('map-loaded', function () {
-    router.push('/intro');
-});
+// EventBus.$on('map-loaded', function () {
+//     router.push('/intro');
+// });
 
 let vm = new Vue({
     router,
