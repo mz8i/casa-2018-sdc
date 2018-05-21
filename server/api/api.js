@@ -82,6 +82,11 @@ api.get('/stops/beats', function (req, res) {
 
 });
 
+//  API EndPoint to get data from transport routes
+api.get('/chicago/transit/wkt', function (req, res) {
+        sqlResponse("SELECT geometry AS wkt FROM route_shapes", res);
+});
+
 
 
 module.exports = api;
