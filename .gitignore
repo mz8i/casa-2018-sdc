@@ -1,5 +1,7 @@
 analysis/data
 
+*.hot-update.js*
+
 # Logs
 logs
 *.log

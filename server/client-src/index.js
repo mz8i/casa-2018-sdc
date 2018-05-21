@@ -1,6 +1,8 @@
 // import * as d3 from 'd3';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import BootstrapVue from 'bootstrap-vue'
+
 
 import App from './components/App.vue';
 import IntroScreen from './components/IntroScreen.vue';
@@ -10,6 +12,10 @@ import AnalysisScreen from './components/AnalysisScreen.vue';
 import {EventBus} from './event-bus.js';
 
 Vue.use(VueRouter);
+Vue.use(BootstrapVue);
+
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 const router = new VueRouter({
     routes: [

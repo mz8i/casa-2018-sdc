@@ -18,7 +18,7 @@ api.use(cors({
 api.use(crimes);
 
 api.get('/beats', function(req,res){
-        var sql = "SELECT beat_num, wkt, `TOTAL POPULATION` from beat_population";
+        var sql = "SELECT beat_num as beat_number, wkt, `TOTAL POPULATION` as population from beat_population";
 
         sqlResponse(sql, res);
 });
