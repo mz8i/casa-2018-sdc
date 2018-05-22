@@ -27,7 +27,7 @@ import wellknown from 'wellknown';
 import {point, feature, featureCollection} from '@turf/helpers';
 import work from 'webworkify-webpack';
 
-import {getApi, chicagoCenter, hexToDeckColor, getStyle} from '../utils';
+import {getApi, chicagoCenter, hexToDeckColor, getStyle, interpolateArr} from '../utils';
 import { EventBus } from '../event-bus';
 
 var datasets = {
@@ -169,6 +169,8 @@ export default {
             if(!this.active || !datasets.crimes[key]) return;
 
             var vm = this;
+            let colors = interpolateArr(hexToDeckColor(this.style['overview-bar-color-min']), hexToDeckColor(this.style['overview-bar-color-max']), 20);
+            console.log(colors);
             let hexOptions = {
                 id: 'crimes-3d',
                 data: datasets.crimes[key].filter(x => 
@@ -177,7 +179,7 @@ export default {
                 extruded: true,
                 radius: 200,
                 elevationScale: 4,
-                colorRange: [hexToDeckColor(this.style['overview-bar-color-min']), hexToDeckColor(this.style['overview-bar-color-max'])],
+                colorRange: colors,
                 opacity: 0.5,
                 autoHighlight: true,
                 highlightColor: [255, 0, 0, 200],

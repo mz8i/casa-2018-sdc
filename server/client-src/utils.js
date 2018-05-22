@@ -1,3 +1,5 @@
+import {interpolateArray} from 'd3-interpolate';
+
 let chicagoCenter = [-87.6297982, 41.8781136];
 
 function getApi(url){
@@ -37,10 +39,17 @@ function getStyle() {
         });
 }
 
+function interpolateArr(arrA, arrB, n_steps) {
+    let step = 1.0 / n_steps;
+    let i = interpolateArray(arrA, arrB);
+    return [...Array(n_steps).keys()].map(x => i(x*step).slice());
+}
+
 export { 
     chicagoCenter,
     getApi,
     clamp,
     hexToDeckColor,
-    getStyle
+    getStyle,
+    interpolateArr
 };
