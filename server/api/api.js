@@ -15,7 +15,8 @@ api.use(cors({
 api.use(crimes);
 
 api.get('/beats', function(req,res){
-        var sql = "SELECT beat_num as beat_number, wkt, `TOTAL POPULATION` as population from beat_population";
+        var sql = "SELECT bp.beat_num as beat_number, wkt, bp.`TOTAL POPULATION` as population, cl.Affinity as cluster \
+        FROM beat_population bp JOIN Clusters cl on bp.beat_num = cl.Beat";
 
         sqlResponse(sql, res);
 });
@@ -29,7 +30,7 @@ api.get('/chicago/communities/wkt', function(req, res){
 });
 
 
-//  API EndPoint to get data from 311 calls 
+//  API EndPoint to get data from 311 calls
 api.get('/calls', function (req, res) {
 
         // If all the variables are provided connect to the database
@@ -50,7 +51,7 @@ api.get('/calls', function (req, res) {
 });
 
 
-//  API EndPoint to get data from transport stops 
+//  API EndPoint to get data from transport stops
 api.get('/stops', function (req, res) {
         // SQL Statement to run
         var sql = "SELECT stop_id, stop_lat as lat, stop_lon as lon, beat_num as beat, stop_type as type, stop_name as name FROM (SELECT SYSTEMSTOP, beat_num, 'Bus' as stop_type from bus_beat UNION ALL SELECT STOP_ID, beat_num, 'Rail' as stop_type from rail_beat) stop_beats INNER JOIN stops ON SYSTEMSTOP = stops.stop_id";
@@ -58,19 +59,19 @@ api.get('/stops', function (req, res) {
         if(req.query.type){
                 sql += " WHERE stop_beats.stop_type = " + mysql.escape(req.query.type);
         }
-        
+
         sqlResponse(sql, res);
 
 });
 
-//  API EndPoint to get data from 311 calls aggregated by beat 
+//  API EndPoint to get data from 311 calls aggregated by beat
 api.get('/calls/beats', function (req, res) {
 
         // SQL Statement to run
         var sql = "SELECT beat_num, Type, count(*) from calls311 group by beat_num, Type" ;
 
         sqlResponse(sql, res);
-   
+
 });
 
 //  API EndPoint to get data from transport stops aggregated by Beat
@@ -87,7 +88,7 @@ api.get('/chicago/transit/wkt', function (req, res) {
         var sql = "SELECT DISTINCT rs.geometry as wkt, rt.route_type_name \
         FROM route_shapes rs JOIN trips t ON rs.shape_id = t.shape_id JOIN routes r \
         ON t.route_id = r.route_id JOIN route_type rt ON r.route_type = rt.route_type";
-        
+
         if(req.query.type){
                 sql += " WHERE route_type_name = " + mysql.escape(req.query.type);
         }
