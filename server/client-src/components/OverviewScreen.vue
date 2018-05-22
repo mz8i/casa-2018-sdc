@@ -182,9 +182,12 @@ export default {
                 colorRange: colors,
                 opacity: 0.5,
                 autoHighlight: true,
-                highlightColor: [255, 0, 0, 200],
+                highlightColor: hexToDeckColor(this.style['overview-bar-highlight-color']),
                 getPosition: d => [d.Longitude, d.Latitude],
-                onHover: ({object}) => vm.setTooltip(vm.getTooltipText(object))
+                onHover: ({object}) => {
+
+                    vm.setTooltip(vm.getTooltipText(object));
+                }
             };
 
             if(this.normaliseGlobal) hexOptions.elevationDomain = [0, 2000];
