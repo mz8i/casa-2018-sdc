@@ -170,7 +170,12 @@
             },
             addLayer: function(layerParams) {
                 const [layerOptions, beforeLayer] = layerParams;
-                mapObj._map.addLayer(layerOptions, beforeLayer);
+                try{
+                    mapObj._map.addLayer(layerOptions, beforeLayer);
+                } catch(error) {
+                    mapObj._map.removeLayer(layerOptions.id);
+                    mapObj._map.addLayer(layerOptions, beforeLayer);
+                }
             },
 
             removeLayer: function(id) {

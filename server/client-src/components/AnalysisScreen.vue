@@ -19,16 +19,18 @@ import {getApi} from '../utils';
 import { EventBus } from '../event-bus';
 
 
+let datasets = {};
+
 let startPoint = { center: [-87.9074, 41.9742], zoom: 13, pitch: 0, bearing: 0 };
 
 export default {
     name: 'AnalysisScreen',
-    beforeRouteEnter: function(to, from, next) {
-        next(vm => {
-            vm.active = true;
-            vm.start();
-        })
-    },
+    // beforeRouteEnter: function(to, from, next) {
+    //     next(vm => {
+    //         vm.active = true;
+    //         vm.start();
+    //     })
+    // },
     beforeRouteLeave: function(to, from, next) {
         this.end();
         this.active = false;
@@ -37,8 +39,9 @@ export default {
     created: function() {
         this.stopsLayer = null;
         this.routesLayer = null;
-        this.datasets = {};
         console.log('created');
+        this.active = true;
+        this.start();
     },
     data: () => ({
         active: false,
@@ -46,9 +49,11 @@ export default {
     }),
     methods: {
         start: function() {
-            this.loadBeats();
-            this.loadRoutes();
-            this.loadStops();
+            Vue.nextTick(() => {
+                this.loadBeats();
+                this.loadRoutes();
+                this.loadStops();
+            });
         },
         end: function() {
             this.removeBeats();
@@ -66,7 +71,7 @@ export default {
             // }
         },
         loadBeats: function() {
-            if(this.datasets.beats){
+            if(datasets.beats){
                 this.updateBeats();
                 return;
             }
@@ -79,7 +84,7 @@ export default {
                         }))
                     );
 
-                    this.datasets.beats = geojson;
+                    datasets.beats = geojson;
 
                     Vue.nextTick(() => {
                         this.updateBeats();
@@ -87,13 +92,13 @@ export default {
                 });
         },
         updateBeats: function() {
-            if(!this.active || !this.datasets.beats) return;
+            if(!this.active || !datasets.beats) return;
 
             EventBus.$emit('add-source', {
                 sourceName: 'beats',
                 sourceOptions: {
                     type: 'geojson',
-                    data: this.datasets.beats
+                    data: datasets.beats
                 }
             });
 
@@ -130,26 +135,26 @@ export default {
             EventBus.$emit('remove-source', 'beats');
         },
         loadStops: function(){
-            if(this.datasets.stops){
+            if(datasets.stops){
                 this.updateStops();
                 return;
             }
             getApi('/api/stops?type=Rail')
                 .then(data => {
-                    this.datasets.stops = data;
+                    datasets.stops = data;
                     Vue.nextTick(() => {
                         this.updateStops();
                     });
                 });
         },
         updateStops: function() {
-            if(!this.active || !this.datasets.stops) return;
+            if(!this.active || !datasets.stops) return;
 
             var context = this;
 
             this.stopsLayer = new IconLayer({
                 id: 'stop-icons',
-                data: this.datasets.stops,
+                data: datasets.stops,
                 visible: this.displayTransport,
                 pickable: true,
                 iconAtlas: 'static/images/icon-atlas.png',
@@ -186,7 +191,7 @@ export default {
             EventBus.$emit('remove-deck-layer', 'stop-icons');
         },
         loadRoutes: function() {
-            if(this.datasets.routes){
+            if(datasets.routes){
                 this.updateRoutes();
                 return;
             }
@@ -197,7 +202,7 @@ export default {
                     let geojson = featureCollection(
                         data.map(x => feature(wellknown(x.wkt)))
                     );
-                    this.datasets.routes = geojson;
+                    datasets.routes = geojson;
 
                     Vue.nextTick(() => {
                         this.updateRoutes();
@@ -206,12 +211,12 @@ export default {
                 });
         },
         updateRoutes: function() {
-            if(!this.active || !this.datasets.routes) return;
+            if(!this.active || !datasets.routes) return;
 
             var context = this;
             this.routesLayer = new GeoJsonLayer({
                 id: 'routes',
-                data: this.datasets.routes,
+                data: datasets.routes,
                 visible: this.displayTransport,
                 pickable: false,
                 stroked: true,

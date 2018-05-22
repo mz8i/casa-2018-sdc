@@ -33,7 +33,8 @@ module.exports = {
         new webpack.ProvidePlugin({
             mapboxgl: 'mapbox-gl'
         }),
-        new VueLoaderPlugin()
+        new VueLoaderPlugin(),
+        new webpack.NamedModulesPlugin()
     ],
     stats: {
         colors: true
