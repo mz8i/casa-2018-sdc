@@ -88,6 +88,9 @@ api.get('/chicago/transit/wkt', function (req, res) {
         
         sqlResponse(sql, res);
 });
+        if(req.query.type){
+                sql += " WHERE route_type_name = " + mysql.escape(req.query.type);
+        }
 
 
 
