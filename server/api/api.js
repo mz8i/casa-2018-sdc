@@ -94,6 +94,12 @@ api.get('/chicago/transit/wkt', function (req, res) {
         sqlResponse(sql, res);
 });
 
+api.get('/style', function(req, res) {
+        var sql = "SELECT name, value from Styles";
+
+        sqlResponse(sql, res);
+});
+
 
 
 module.exports = api;

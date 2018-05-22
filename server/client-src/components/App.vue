@@ -43,7 +43,7 @@
     import { EventBus } from '../event-bus';
     import { clamp } from '../utils';
 
-    const mapboxToken = "pk.eyJ1IjoibXo4aSIsImEiOiJjamg0d2pxcDMxNXFzMnFwdG52aG81cTc5In0.CksGFWg2x0MiWRShMnYsxQ";
+    const mapboxToken = 'pk.eyJ1IjoianVsaWFuaG9mZm1hbm5hbnRvbiIsImEiOiJjamhlcHM2a2Iwd3d2M2RxdnBzbmY5bm5qIn0.PL5CUOX7N6PVtFt838hZsg';//"pk.eyJ1IjoibXo4aSIsImEiOiJjamg0d2pxcDMxNXFzMnFwdG52aG81cTc5In0.CksGFWg2x0MiWRShMnYsxQ";
     const initialViewState = {
         longitude: -87.6297982,
         latitude:  41.8781136, // initial map center in [lon,lat]
@@ -97,7 +97,7 @@
             mapObj = new Map({
                 mapboxApiAccessToken: mapboxToken,
                 container: 'map',
-                style: 'mapbox://styles/mz8i/cjh51i78x2p2e2squotdvm06f',
+                style: 'mapbox://styles/julianhoffmannanton/cjhhmqpsj5t6y2smi6zx69rkn',//'mapbox://styles/mz8i/cjh51i78x2p2e2squotdvm06f',
                 viewState: initialViewState
             });
 

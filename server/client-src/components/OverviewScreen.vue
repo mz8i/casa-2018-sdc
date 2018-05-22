@@ -27,7 +27,7 @@ import wellknown from 'wellknown';
 import {point, feature, featureCollection} from '@turf/helpers';
 import work from 'webworkify-webpack';
 
-import {getApi, chicagoCenter} from '../utils';
+import {getApi, chicagoCenter, hexToDeckColor, getStyle} from '../utils';
 import { EventBus } from '../event-bus';
 
 var datasets = {
@@ -84,6 +84,8 @@ export default {
                 this.loadCrimes(this.year, this.crimeType);
                 this.addChicagoOutline();
                 this.loadCommunityOutlines();
+                var vm = this;
+                getStyle().then(data => vm.style = data);
             });
         },
         end: function() {
@@ -175,6 +177,7 @@ export default {
                 extruded: true,
                 radius: 200,
                 elevationScale: 4,
+                colorRange: [hexToDeckColor(this.style['overview-bar-color-min']), hexToDeckColor(this.style['overview-bar-color-max'])],
                 opacity: 0.5,
                 autoHighlight: true,
                 highlightColor: [255, 0, 0, 200],
