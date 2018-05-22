@@ -1,11 +1,24 @@
 <template>
     <div id="app">
-        <div id="navbar">
-            <router-link to="intro">Introduction</router-link>
-            <router-link to="overview">Overview</router-link>
-            <router-link to="time">Temporal</router-link>
-            <router-link to="analysis">Analysis</router-link>            
-        </div>
+        <b-navbar id="navbar" toggleable="md" type="dark" variant="crime">
+            <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
+            <b-collapse is-nav id="nav_collapse">
+                <b-navbar-nav class="ml-auto">
+                    <b-nav-item right to="intro">Introduction</b-nav-item>
+                    <b-nav-item right to="overview">Overview</b-nav-item>
+                    <b-nav-item right to="time">Temporal</b-nav-item>
+                    <b-nav-item right to="analysis">Analysis</b-nav-item>
+                </b-navbar-nav>
+            </b-collapse>
+        </b-navbar>
+        <!-- <div class="navbar">
+            <div class="navbar-container">
+                <router-link to="intro">Introduction</router-link>
+                <router-link to="overview">Overview</router-link>
+                <router-link to="time">Temporal</router-link>
+                <router-link to="analysis">Analysis</router-link>
+            </div>         
+        </div> -->
         <div id="map-container">
             <div id="map"></div>
             <canvas id="deck-canvas" ref='deck'></canvas>
@@ -14,7 +27,6 @@
         <div id="camera-debug">
             <textarea v-model="viewStateString" readonly ref="camera" cols=30 rows=10>
             </textarea>
-            <br />
             <button @click="copyCameraDebug">Copy</button>
         </div>
 
@@ -25,15 +37,17 @@
 </template>
 
 <script>
-    import Map from '../mapbox';
     import {Deck, GeoJsonLayer, HexagonLayer, MapController} from '@deck.gl/core';
+
+    import Map from '../mapbox';
     import { EventBus } from '../event-bus';
+    import { clamp } from '../utils';
 
     const mapboxToken = "pk.eyJ1IjoibXo4aSIsImEiOiJjamg0d2pxcDMxNXFzMnFwdG52aG81cTc5In0.CksGFWg2x0MiWRShMnYsxQ";
     const initialViewState = {
         longitude: -87.6297982,
         latitude:  41.8781136, // initial map center in [lon,lat]
-        zoom: 9,
+        zoom: 10,
         bearing: 0,
         pitch: 0
     };
@@ -59,7 +73,13 @@
         },
         data: () => ({
             viewState: {},
-            transitionName: 'slide-up'
+            transitionName: 'slide-up',
+            minZoom: 10,
+            maxZoom: 17,
+            minLat: 41.5,
+            maxLat: 42.1,
+            minLon: -88,
+            maxLon: -87.3
         }),
         computed: {
             viewStateString: function() {
@@ -83,7 +103,7 @@
 
             var ignoreNextMove = false;
 
-            var context = this;
+            var vm = this;
             deckgl = new Deck({
                 canvas: 'deck-canvas',
                 width: '100%',
@@ -91,12 +111,21 @@
                 viewState: initialViewState,
                 controller: MapController,
                 onViewportChange: viewState => {
+                    const {maxZoom, minZoom, minLat, maxLat, minLon, maxLon} = vm;
+
+                    if(viewState.zoom < minZoom) return;
+                    viewState.latitude = clamp(viewState.latitude, minLat, maxLat);
+                    viewState.longitude = clamp(viewState.longitude, minLon, maxLon);
+                    viewState.zoom = clamp(viewState.zoom, minZoom, maxZoom);
+
+                    console.log(viewState);
                     // this is to avoid an infinite event loop and at the same time allow map.flyTo sync
                     ignoreNextMove = true;
                     
+
                     deckgl.setProps({viewState});
                     mapObj.setProps({viewState});
-                    context.setViewState(viewState);
+                    vm.setViewState(viewState);
                 }
             });
 
@@ -191,23 +220,29 @@
 </script>
 
 <style scoped>
-    #navbar {
-        position: absolute;
+    .navbar {
+        /* position: absolute; */
         z-index: 100;
-        top:0;
+        /* top:0;
         width: 100%;
-        height: 40px;
+        height: 40px; */
     }
 
-    #navbar > * {
+    /* .navbar-container {
+        float: right;
+        width: 200px;
+    }
+
+    .navbar-container > * {
+        margin-top: 10px;
+        margin-bottom: 10px;
         margin-left: 20px;
         margin-right:20px;
-        float: right;
     }
 
-    #navbar :after {
+    .navbar :after {
         clear: right;
-    }
+    } */
 
     #map-container {
         position: fixed;
@@ -228,9 +263,23 @@
     #camera-debug {
         background-color: rgba(100, 100, 100, 0.5);
         width: 250px;
-        height: 200px;
+        height: 280px;
         position: absolute;
         bottom: 2px;
         right: 2px;
+    }
+
+    #deckgl-overlay {
+        cursor: move; /* fallback if grab cursor is unsupported */
+        cursor: grab;
+        cursor: -moz-grab;
+        cursor: -webkit-grab;
+    }
+
+ /* (Optional) Apply a "closed-hand" cursor during drag operation. */
+    #deckgl-overlay:active { 
+        cursor: grabbing;
+        cursor: -moz-grabbing;
+        cursor: -webkit-grabbing;
     }
 </style>

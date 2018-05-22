@@ -4,14 +4,44 @@ Created on Thu May 17 18:35:50 2018
 
 @author: Nico
 """
+##################INCLUDES:####################################################
+#0.-Importing Packages
+#1.-DATA CLEANING
+#2.-Scatter Matrix
+#3.-Scaling dataset
+#4.-Performing PCA
+##4.1.-Biplot (can be used with without coloring points by clusters)
+##4.2.-PCA without Serious Crimes
+#5.-ClUSTERING ANALYSIS
+##5.1.-DBSCAN
+##5.2.-Running Agglomerative (Hierarchical) Clustering with Silhouette analysis
+##5.3.-Silhouette Analysis can be used with KMeans as well by uncommenting + Plot
+##5.3.-Affinity propagation clustering + Plot
+###############################################################################
+
+
+################ 0.- Importing Packages #######################################
+from __future__ import print_function#Used in Silhoutte analysis chunk
+
 import pandas as pd
 import os
 import numpy as np
 #import statistics
 #import datetime as dt
-#from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
+from sklearn.neighbors import NearestNeighbors
+from sklearn.cluster import DBSCAN
 
-############DATA CLEANING######################################################
+#Silhoutte analysis chunk
+#from sklearn.datasets import make_blobs
+#from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering as agglom
+from sklearn.metrics import silhouette_samples, silhouette_score
+import matplotlib.cm as cm
+from itertools import cycle
+
+
+############### 1.- DATA CLEANING #############################################
 
 #First you need to change your current directory to the analysis directory in your computer
 #os.chdir("C:/.../casa-2018-sdc/analysis")
@@ -324,8 +354,368 @@ data_beat=pd.merge(data_beat,dummies_Locations,how='left',left_index=True,right_
 #Data_beat without columns: 'crimes count'
 data_beat_X=data_beat.iloc[:,1:]
 
+
+#Beats with calls data
+data_calls= pd.read_csv(os.path.join(data_dir, "beat_calls.csv"),index_col=0)
+data_calls.rename(columns={"Calls_Alley":"C_Alley","Time_Alleys":"TC_Alley","Calls_All_Out":"C_Two","Time_All_Out":"TC_Two","Calls_One_Out":"C_One","Time_One_Out":"TC_One"},inplace=True)
+#Merging with data_beat
+data_beat_X=pd.merge(data_beat_X,data_calls,how='left',left_index=True,right_index=True)
+#Changing Counts of calls for calls per 1000 inhabitants
+data_beat_X.C_Alley=data_beat_X.C_Alley/data_beat_X.Population*1000
+data_beat_X.C_Two=data_beat_X.C_Two/data_beat_X.Population*1000
+data_beat_X.C_One=data_beat_X.C_One/data_beat_X.Population*1000
+
+#Beats with transport data
+data_transport= pd.read_csv(os.path.join(data_dir, "beat_transport.csv"),index_col=0)
+data_transport.rename(columns={"bus_Stations":"T_BusS","Routes_Bus":"T_BusR","Rail_Stations":"T_RailS","Routes_Rail":"T_RailR"},inplace=True)
+#Merging with data_beat
+data_beat_X=pd.merge(data_beat_X,data_transport,how='left',left_index=True,right_index=True)
+data_beat_X.T_BusS=data_beat_X.T_BusS/data_beat_X.Population*1000
+data_beat_X.T_RailS=data_beat_X.T_RailS/data_beat_X.Population*1000
+#Replacing nan with zeros
+data_beat_X.T_BusS.fillna(0,inplace=True)
+data_beat_X.T_BusR.fillna(0,inplace=True)
+data_beat_X.T_RailS.fillna(0,inplace=True)
+data_beat_X.T_RailR.fillna(0,inplace=True)
+
+
 #Save data in csv (for not running the whole data cleaning)
-data_beat_X.to_csv(os.path.join(data_dir, "Data_beats.csv"))
+#data_beat_X.to_csv(os.path.join(data_dir, "Data_beats.csv"))
 
-#PCA Analysis
+#####Calls data
+#Importing data (not neccesary if you are running all of the above code)
+#beats with 59 variables
+data_beat_X = pd.read_csv(os.path.join(data_dir, "Data_beats.csv"),index_col=0) 
 
+#Replacing na and inf values for 0
+data_beat_X=data_beat_X.replace(np.inf,0)
+data_beat_X.fillna(0,inplace=True)
+
+#Data without Pct_Serious
+data_wout_Serious=data_beat_X.drop(labels='Pct_Serious',axis=1)
+
+################## 2.- Scatter Matrix##########################################
+def scatter_features(data): 
+    axs=pd.plotting.scatter_matrix(data, alpha=0.2, figsize=(12, 12), diagonal='kde')
+    n = len(data.columns)
+    for x in range(n):
+        for y in range(n):
+            # to get the axis of subplots
+            ax = axs[x, y]
+            # to make x axis name vertical  
+            ax.xaxis.label.set_rotation(90)
+            # to make y axis name horizontal 
+            ax.yaxis.label.set_rotation(0)
+            # to make sure y axis names are outside the plot area
+            ax.yaxis.labelpad = 50 
+
+#Scatter for first 10 columns
+scatter_features(data_beat_X.iloc[:,0:10])
+#Saving figure
+plt.savefig(os.path.join(data_dir,"Scatter.png"),bbox_inches='tight')
+
+#Scatter for types of crimes
+scatter_features(data_beat_X.iloc[:,10:36])
+
+#Scatter for locations of crimes
+scatter_features(data_beat_X.iloc[:,36:53])
+
+#Scatter for Transport and calls
+scatter_features(data_beat_X.iloc[:,53:])
+
+################### 3.- Scaling dataset########################################
+import sklearn.preprocessing as preprocessing
+
+data_scaled=pd.DataFrame(preprocessing.scale(data_beat_X),index=data_beat_X.index,columns=list(data_beat_X))
+#Other way to scale data
+data_std = preprocessing.StandardScaler().fit_transform(data_beat_X)
+
+#Scale dataset without Serious crimes
+data_std_woutS = preprocessing.StandardScaler().fit_transform(data_wout_Serious)
+
+################## 4.- Perform PCA#############################################
+from sklearn.decomposition import PCA as sklearnPCA
+#sklearn_pca = sklearnPCA(n_components=4)
+sklearn_pca = sklearnPCA()
+#Saving observations projected into PC1,PC2,PC3 (scores)
+Y_sklearn = sklearn_pca.fit_transform(data_std)
+Y_sklearn=pd.DataFrame(Y_sklearn,index=data_beat_X.index,columns=['PC' + str(number) for number in list(range(1,Y_sklearn.shape[1]+1))])
+
+#Getting loadings for the first 3 components
+loadings=pd.DataFrame(sklearn_pca.components_,index=['PC' + str(number) for number in list(range(1,Y_sklearn.shape[1]+1))],columns=list(data_beat_X))
+loadings=loadings.T
+
+#Plotting first two scores
+plt.scatter(Y_sklearn.iloc[:,0],Y_sklearn.iloc[:,1])
+#Saving scores
+Y_sklearn.iloc[:,0:3].to_csv(os.path.join(data_dir, "Y_sklearn.csv"))
+
+
+######### 4.1.- Biplot #############
+def biplot(score,coeff,pcax,pcay,labels=None,color_clusters=None):
+    pca1=pcax-1
+    pca2=pcay-1
+    xs = score[:,pca1]
+    ys = score[:,pca2]
+    n=score.shape[1]
+    scalex = 1.0/(xs.max()- xs.min())
+    scaley = 1.0/(ys.max()- ys.min())
+    
+    if color_clusters is None:
+        plt.scatter(xs*scalex,ys*scaley)
+    else:
+        plt.scatter(xs*scalex,ys*scaley,c=color_clusters,cmap='Dark2', 
+                    alpha=0.9)
+        #plt.scatter(xs*scalex,ys*scaley,c=color_clusters,cmap='Dark2', marker='.', 
+        #            s=30, lw=0, alpha=0.7, edgecolor='k')
+    #Adding color
+    #plt.scatter(xs*scalex,ys*scaley,c=clusters)
+    for i in range(n):
+        plt.arrow(0, 0, coeff[i,pca1], coeff[i,pca2],color='r',alpha=0.5) 
+        if labels is None:
+            plt.text(coeff[i,pca1]* 1.15, coeff[i,pca2] * 1.15, "Var"+str(i+1), color='g', ha='center', va='center')
+        else:
+            plt.text(coeff[i,pca1]* 1.15, coeff[i,pca2] * 1.15, labels[i], color='g', ha='center', va='center')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    plt.xlabel("PC{}".format(pcax))
+    plt.ylabel("PC{}".format(pcay))
+    plt.grid()
+    
+
+#We can plot 2d biplots for the 3 pairs of PC
+#PC1 vs PC2
+biplot(sklearn_pca.fit_transform(data_std),np.transpose(sklearn_pca.components_),1,2,labels=list(data_beat_X))
+#PC1 vs PC3
+biplot(sklearn_pca.fit_transform(data_std),np.transpose(sklearn_pca.components_),1,3,labels=list(data_beat_X))
+#PC2 vs PC3
+biplot(sklearn_pca.fit_transform(data_std),np.transpose(sklearn_pca.components_),2,3,labels=list(data_beat_X))
+
+########### 4.2.- PCA without Serious Crimes ###########
+pca_woutS = sklearnPCA()
+#Saving observations projected into PC1,PC2,PC3 (scores)
+Y_sklearn_woutS_numpy = pca_woutS.fit_transform(data_std_woutS)
+Y_sklearn_woutS=pd.DataFrame(Y_sklearn_woutS_numpy,index=data_wout_Serious.index,columns=['PC' + str(number) for number in list(range(1,Y_sklearn_woutS_numpy.shape[1]+1))])
+
+#Percentage of Variance explained by PComponents
+variance_woutS=pca_woutS.explained_variance_ratio_ 
+variance_woutS[0:3]
+sum(variance_woutS[0:3])
+
+#Getting loadings for the first 3 components
+loadings_woutS=pd.DataFrame(pca_woutS.components_,index=['PC' + str(number) for number in list(range(1,Y_sklearn_woutS.shape[1]+1))],columns=list(data_wout_Serious))
+loadings_woutS=loadings_woutS.T
+
+#Saving scores
+Y_sklearn_woutS.iloc[:,0:3].to_csv(os.path.join(data_dir, "Y_sklearn_woutS.csv"))
+
+
+##################### 5.- CLUSTERING ANALYSIS##################################
+
+###### 5.1.- Running DBSCAN #######
+#Choosing eps parameter
+#from sklearn.neighbors import NearestNeighbors
+nbrs = NearestNeighbors(n_neighbors=4).fit(Y_sklearn_woutS.iloc[:,0:3])
+distances, indices = nbrs.kneighbors(Y_sklearn_woutS.iloc[:,0:3])
+#print(distances.shape)
+#print(type(distances[:,3]))
+distances_ordered=np.sort(distances[:,3])#sorting in ascending order
+#distances_ordered=-np.sort(-distances[:,4])#sorting in descending order
+#Plotting distances of the 4th nearest neighbours to choose eps (look for a knee)
+plt.plot(distances_ordered)
+plt.axhline(y=1.3, color='r', linestyle='--')
+
+#from sklearn.cluster import DBSCAN
+dbscan = DBSCAN(eps=0.5, min_samples=4) # create DBSCAN cluster object
+dbscan.fit(Y_sklearn_woutS.iloc[:,0:3]) # run the .fit() function on the scaled dataset
+dbscan_labels = dbscan.labels_
+
+
+#### 5.2.- Running Agglomerative (Hierarchical) Clustering #####
+########## with Silhouette analysis #########################
+
+#from __future__ import print_function
+
+#from sklearn.datasets import make_blobs
+#from sklearn.cluster import KMeans
+#from sklearn.metrics import silhouette_samples, silhouette_score
+
+#import matplotlib.pyplot as plt
+#import matplotlib.cm as cm
+#import numpy as np
+
+X=Y_sklearn_woutS_numpy[:,0:3]
+
+range_n_clusters = list(range(7,8))#range(2,11) or [2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+for n_clusters in range_n_clusters:
+    # Create a subplot with 1 row and 2 columns
+    fig, ((ax1,ax5,ax6), (ax2,ax3,ax4)) = plt.subplots(2, 3)
+    fig.set_size_inches(18, 7)
+
+    # The 1st subplot is the silhouette plot
+    # The silhouette coefficient can range from -1, 1 but in this example all
+    # lie within [-0.1, 1]
+    ax1.set_xlim([-0.1, 1])
+    # The (n_clusters+1)*10 is for inserting blank space between silhouette
+    # plots of individual clusters, to demarcate them clearly.
+    ax1.set_ylim([0, len(X) + (n_clusters + 1) * 10])
+
+    # Initialize the clusterer with n_clusters value and a random generator
+    # seed of 10 for reproducibility.
+    #clusterer = KMeans(n_clusters=n_clusters, random_state=10) #using KMeans
+    clusterer = agglom(n_clusters=n_clusters) #using agglomerative
+    cluster_labels = clusterer.fit_predict(X)
+
+    # The silhouette_score gives the average value for all the samples.
+    # This gives a perspective into the density and separation of the formed
+    # clusters
+    silhouette_avg = silhouette_score(X, cluster_labels)
+    print("For n_clusters =", n_clusters,
+          "The average silhouette_score is :", silhouette_avg)
+
+    # Compute the silhouette scores for each sample
+    sample_silhouette_values = silhouette_samples(X, cluster_labels)
+
+    y_lower = 10
+    colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+    #for i in range(n_clusters):
+    for i, color in zip(range(n_clusters), colors):
+        # Aggregate the silhouette scores for samples belonging to
+        # cluster i, and sort them
+        ith_cluster_silhouette_values = \
+            sample_silhouette_values[cluster_labels == i]
+
+        ith_cluster_silhouette_values.sort()
+
+        size_cluster_i = ith_cluster_silhouette_values.shape[0]
+        y_upper = y_lower + size_cluster_i
+
+        #color = cm.spectral(float(i) / n_clusters)
+        ax1.fill_betweenx(np.arange(y_lower, y_upper),
+                          0, ith_cluster_silhouette_values,
+                          facecolor=color, edgecolor=color, alpha=0.7)
+
+        # Label the silhouette plots with their cluster numbers at the middle
+        ax1.text(-0.05, y_lower + 0.5 * size_cluster_i, str(i))
+
+        # Compute the new y_lower for next plot
+        y_lower = y_upper + 10  # 10 for the 0 samples
+
+    ax1.set_title("The silhouette plot for the various clusters.")
+    ax1.set_xlabel("The silhouette coefficient values")
+    ax1.set_ylabel("Cluster label")
+
+    # The vertical line for average silhouette score of all the values
+    ax1.axvline(x=silhouette_avg, color="red", linestyle="--")
+
+    ax1.set_yticks([])  # Clear the yaxis labels / ticks
+    ax1.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8, 1])
+
+    # 2nd Plot showing the actual clusters formed
+    colors = cm.spectral(cluster_labels.astype(float) / n_clusters)
+    ax2.scatter(X[:, 0], X[:, 1], marker='.', s=30, lw=0, alpha=0.7,
+                c=colors, edgecolor='k')
+    ###Only with KMeans##################################
+    ## Labeling the clusters
+    #centers = clusterer.cluster_centers_
+    ## Draw white circles at cluster centers
+    #ax2.scatter(centers[:, 0], centers[:, 1], marker='o',
+    #            c="white", alpha=1, s=200, edgecolor='k')
+    #
+    #for i, c in enumerate(centers):
+    #    ax2.scatter(c[0], c[1], marker='$%d$' % i, alpha=1,
+    #                s=50, edgecolor='k')
+    ###End of the only KMeans part#######################
+
+    ax2.set_title("The visualization of the clustered data.")
+    ax2.set_xlabel("Feature space for the 1st feature")
+    ax2.set_ylabel("Feature space for the 2nd feature")
+    
+    # 3rd Plot showing the actual clusters formed
+    colors = cm.spectral(cluster_labels.astype(float) / n_clusters)
+    ax3.scatter(X[:, 0], X[:, 2], marker='.', s=30, lw=0, alpha=0.7,
+                c=colors, edgecolor='k')
+    ax3.set_title("The visualization of the clustered data.")
+    ax3.set_xlabel("Feature space for the 1st feature")
+    ax3.set_ylabel("Feature space for the 3rd feature")
+
+    # 4th Plot showing the actual clusters formed
+    colors = cm.spectral(cluster_labels.astype(float) / n_clusters)
+    ax4.scatter(X[:, 1], X[:, 2], marker='.', s=30, lw=0, alpha=0.7,
+                c=colors, edgecolor='k')
+    ax4.set_title("The visualization of the clustered data.")
+    ax4.set_xlabel("Feature space for the 2nd feature")
+    ax4.set_ylabel("Feature space for the 3rd feature")
+
+    plt.suptitle(("Silhouette analysis for Agglomerative clustering on sample data "
+                  "with n_clusters = %d" % n_clusters),
+                 fontsize=14, fontweight='bold')
+    
+#Saving results for k=7
+agglomerative=agglom(n_clusters=7)
+agglomerative.fit(X)
+agglomerative_labels = agglomerative.labels_
+
+#a=len(np.unique(agglomerative_labels))
+#b=len(np.unique(affinity_labels))
+
+########## 5.3.- Affinity propagation clustering#######
+########## (8 clusters)################################
+
+from sklearn.cluster import AffinityPropagation
+#affinity=AffinityPropagation(preference=-50)
+affinity=AffinityPropagation(damping=0.7,preference=-200)
+affinity.fit(X) # run the .fit() function on the scaled dataset
+affinity_labels = affinity.labels_
+cluster_centers_indices = affinity.cluster_centers_indices_
+n_clusters_ = len(cluster_centers_indices)
+print(n_clusters_)
+unique, counts = np.unique(affinity_labels, return_counts=True)
+print (np.asarray((unique, counts)).T)
+
+# Plot result
+#from itertools import cycle
+#plt.close('all')
+plt.figure(1)
+plt.clf()
+
+colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+#color_list = plt.cm.Dark2(np.linspace(0, 1, 8))
+#color_list=color_list[:,:3]
+for k, col in zip(range(n_clusters_), colors):
+    class_members = affinity_labels == k
+    cluster_center = X[cluster_centers_indices[k]]
+    plt.plot(X[class_members, 0], X[class_members, 1], col + '.')#Change between 0,1,2
+    #plt.scatter(X[class_members, 0], X[class_members, 1], tuple(color_list[k]))#Change between 0,1,2
+    plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,#Change between 0,1,2
+    #plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=tuple(color_list[k]),#Change between 0,1,2
+             markeredgecolor='k', markersize=10)
+    for x in X[class_members]:
+        plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)#Change between 0,1,2
+plt.title('Estimated number of clusters: %d' % n_clusters_)
+
+#Scatterplots
+#plt.figure(2)
+#plt.scatter(X[:, 0], X[:, 2],c=affinity_labels) #Change between 0,1,2
+#plt.scatter(X[:, 0], X[:, 1],c=affinity_labels,cmap='winter')      
+
+#We can plot 2d biplots for the 3 pairs od PC with colors
+#PC1 vs PC2
+plt.figure(13)
+biplot(Y_sklearn_woutS_numpy,np.transpose(pca_woutS.components_),1,2,labels=list(data_wout_Serious),color_clusters=affinity_labels)
+#PC1 vs PC3
+plt.figure(14)
+biplot(Y_sklearn_woutS_numpy,np.transpose(pca_woutS.components_),1,3,labels=list(data_wout_Serious),color_clusters=affinity_labels)
+#PC2 vs PC3
+plt.figure(15)
+biplot(Y_sklearn_woutS_numpy,np.transpose(pca_woutS.components_),2,3,labels=list(data_wout_Serious),color_clusters=affinity_labels)
+
+#######Saving beats clustered by Agglomerative/Hierarchical Method and Affinity Propagation
+data_clusters=data_wout_Serious
+data_clusters['Agglomerative']=agglomerative_labels
+data_clusters['Affinity']=affinity_labels
+data_clusters=data_clusters.iloc[:,-2:]
+data_clusters.to_csv(os.path.join(data_dir,'data_clusters.csv'))
+data_clusters.Affinity.value_counts()
+data_clusters.Agglomerative.value_counts()

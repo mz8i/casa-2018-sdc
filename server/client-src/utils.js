@@ -4,4 +4,13 @@ function getApi(url){
     return fetch(url)
         .then(res => res.json());
 }
-export { chicagoCenter, getApi};
+
+function clamp(num, min, max) {
+    return (min && num <= min) ? min : (max && num >= max) ? max : num;
+}
+
+export { 
+    chicagoCenter,
+    getApi,
+    clamp
+};
