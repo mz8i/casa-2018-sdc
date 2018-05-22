@@ -2,6 +2,7 @@
     <div class="screen analysis-screen">
         <h1>Analysis Screen test</h1>
         <router-link to="intro">Go to Intro</router-link>
+        <br />
         <b-form-checkbox v-model="displayTransport" @change="updateLayerVisibility" >Transport</b-form-checkbox>
     </div>
 </template>
@@ -37,6 +38,7 @@ export default {
         this.stopsLayer = null;
         this.routesLayer = null;
         this.datasets = {};
+        console.log('created');
     },
     data: () => ({
         active: false,
@@ -44,7 +46,7 @@ export default {
     }),
     methods: {
         start: function() {
-            this.addBeats();
+            this.loadBeats();
             this.loadRoutes();
             this.loadStops();
         },
@@ -63,7 +65,11 @@ export default {
             //     this.routesLayer.visibile = this.displayTransport;
             // }
         },
-        addBeats: function() {
+        loadBeats: function() {
+            if(this.datasets.beats){
+                this.updateBeats();
+                return;
+            }
             getApi('/api/beats')
                 .then(data => {
                     let geojson = featureCollection(
@@ -73,84 +79,61 @@ export default {
                         }))
                     );
 
-                    // const beats = new GeoJsonLayer({
-                    //     id: 'beats',
-                    //     data: geojson,
-                    //     pickable: false,
-                    //     stroked: true,
-                    //     filled: true,
-                    //     extruded: false,
-                    //     lineWidthScale: 20,
-                    //     lineWidthMinPixels: 2,
-                    //     getFillColor: d => [160, 160, 180, 200],
-                    //     getLineColor: d => [20, 20, 20, 255],
-                    //     getRadius: d => 100,
-                    //     getLineWidth: d => 1,
-                    //     getElevation: d => 30
-                    // });
-                    // const outlines = new GeoJsonLayer({
-                    //     id: 'outlines',
-                    //     data: geojson,
-                    //     pickable: false,
-                    //     stroked: true,
-                    //     filled: true,
-                    //     extruded: false,
-                    //     lineWidthScale: 20,
-                    //     lineWidthMinPixels: 2,
-                    //     getFillColor: d => [160, 160, 180, 200],
-                    //     getLineColor: d => [20, 20, 20, 255],
-                    //     getRadius: d => 100,
-                    //     getLineWidth: d => 1,
-                    //     getElevation: d => 30
-                    // });
+                    this.datasets.beats = geojson;
 
-                    // EventBus.$emit('add-deck-layer', layer);
-                    // EventBus.$emit('add-deck-layer', beats);
-
-                    EventBus.$emit('add-source', {
-                        sourceName: 'beats',
-                        sourceOptions: {
-                            type: 'geojson',
-                            data: geojson
-                        }
+                    Vue.nextTick(() => {
+                        this.updateBeats();
                     });
-
-                    EventBus.$emit('add-layer', [{
-                        id: 'beats-shape',
-                        type: 'fill',
-                        source: 'beats',
-                        paint: {
-                            'fill-color':
-                            [
-                                'interpolate',
-                                ['linear'],
-                                ['get', 'population'],
-                                0, '#fff',
-                                27000, '#f00'
-                            ],
-                            'fill-opacity': 0.5
-                        }
-                    }, 'waterway-label']);
-
-                    EventBus.$emit('add-layer', [{
-                        id: 'beats-outline',
-                        type: 'line',
-                        source: 'beats',
-                        paint: {
-                            'line-color': '#222',
-                            'line-width': 2 
-                        }
-                    }, 'waterway-label']);
                 });
         },
+        updateBeats: function() {
+            if(!this.active || !this.datasets.beats) return;
+
+            EventBus.$emit('add-source', {
+                sourceName: 'beats',
+                sourceOptions: {
+                    type: 'geojson',
+                    data: this.datasets.beats
+                }
+            });
+
+            EventBus.$emit('add-layer', [{
+                id: 'beats-shape',
+                type: 'fill',
+                source: 'beats',
+                paint: {
+                    'fill-color':
+                    [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'population'],
+                        0, '#fff',
+                        27000, '#f00'
+                    ],
+                    'fill-opacity': 0.5
+                }
+            }, 'waterway-label']);
+
+            EventBus.$emit('add-layer', [{
+                id: 'beats-outline',
+                type: 'line',
+                source: 'beats',
+                paint: {
+                    'line-color': '#222',
+                    'line-width': 2 
+                }
+            }, 'waterway-label']);
+        },
         removeBeats: function() {
-            // EventBus.$emit('remove-deck-layer', 'beats');
-            // EventBus.$emit('remove-deck-layer', 'beats');
             EventBus.$emit('remove-layer', 'beats-shape');
             EventBus.$emit('remove-layer', 'beats-outline');
             EventBus.$emit('remove-source', 'beats');
         },
         loadStops: function(){
+            if(this.datasets.stops){
+                this.updateStops();
+                return;
+            }
             getApi('/api/stops?type=Rail')
                 .then(data => {
                     this.datasets.stops = data;
@@ -203,7 +186,11 @@ export default {
             EventBus.$emit('remove-deck-layer', 'stop-icons');
         },
         loadRoutes: function() {
-            getApi('/api/chicago/transit/wkt?type=Rail')
+            if(this.datasets.routes){
+                this.updateRoutes();
+                return;
+            }
+            getApi('/api/chicago/transit/wkt?type=Metro')
                 .then(data => {
                     var context = this;
 

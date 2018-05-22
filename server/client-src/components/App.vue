@@ -118,7 +118,6 @@
                     viewState.longitude = clamp(viewState.longitude, minLon, maxLon);
                     viewState.zoom = clamp(viewState.zoom, minZoom, maxZoom);
 
-                    console.log(viewState);
                     // this is to avoid an infinite event loop and at the same time allow map.flyTo sync
                     ignoreNextMove = true;
                     

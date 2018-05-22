@@ -83,8 +83,8 @@ api.get('/stops/beats', function (req, res) {
 });
 
 //  API EndPoint to get data from transport routes
-api.get('/chicago/transit/wkt', function (req, res) {        
-        var sql = "SELECT rs.geometry, rt.route_type_name \
+api.get('/chicago/transit/wkt', function (req, res) {
+        var sql = "SELECT DISTINCT rs.geometry as wkt, rt.route_type_name \
         FROM route_shapes rs JOIN trips t ON rs.shape_id = t.shape_id JOIN routes r \
         ON t.route_id = r.route_id JOIN route_type rt ON r.route_type = rt.route_type";
         
