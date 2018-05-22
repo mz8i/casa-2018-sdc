@@ -3,7 +3,6 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import BootstrapVue from 'bootstrap-vue'
 
-
 import App from './components/App.vue';
 import IntroScreen from './components/IntroScreen.vue';
 import OverviewScreen from './components/OverviewScreen.vue';
@@ -19,10 +18,10 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 const router = new VueRouter({
     routes: [
-        { path: '/intro', component: IntroScreen},
-        { path: '/overview', component: OverviewScreen},
-        { path: '/time', component: TimeScreen},
-        { path: '/analysis', component: AnalysisScreen}
+        { path: '/intro', component: IntroScreen, meta: {style:'dark'}},
+        { path: '/overview', component: OverviewScreen, meta: {style: 'dark'}},
+        { path: '/time', component: TimeScreen, meta: {style: 'light'}},
+        { path: '/analysis', component: AnalysisScreen, meta: {style: 'dark'}}
     ]
 });
 

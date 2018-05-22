@@ -19,12 +19,22 @@ body {
   pointer-events: all;
 }
 
-.filler {
-  pointer-events: none;
+.screen:after {
+  clear: both;
 }
 
-a {
-  color: white;
+.sidepanel {
+  width: 300px;
+  position: absolute;
+  right: 20px;
+  top: 100px;
+}
+
+.sidepanel-section {
+  background-color: white;
+  color: #222;
+  margin-bottom: 20px;
+  padding: 20px;
 }
 
 .slide-up-enter-active, .slide-up-leave-active {

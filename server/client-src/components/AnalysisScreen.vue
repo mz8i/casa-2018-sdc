@@ -1,9 +1,26 @@
 <template>
     <div class="screen analysis-screen">
-        <h1>Analysis Screen test</h1>
-        <router-link to="intro">Go to Intro</router-link>
-        <br />
-        <b-form-checkbox v-model="displayTransport" @change="updateLayerVisibility" >Transport</b-form-checkbox>
+        <div class="sidepanel">
+            <div class="sidepanel-section">
+                <h3>Analysis - 2017</h3>
+            </div>
+            <div class="sidepanel-section">
+                <b-form-checkbox v-model="displayTransport" @change="updateLayerVisibility" >Transport</b-form-checkbox>
+            </div>
+            <transition name="fade">
+            <div class="sidepanel-section" v-if="selectedBeat">
+                <h5>Beat {{selectedBeat}}</h5>
+                <b-row>
+                    <b-col md="4">Population:</b-col>
+                    <b-col md="8">{{selectedBeatInfo.population}}</b-col>
+                </b-row>
+                <b-row>
+                    <b-col md="4">Transit stops:</b-col>
+                    <b-col md="8">??</b-col>
+                </b-row>
+            </div>
+            </transition>
+        </div>
     </div>
 </template>
 
@@ -15,7 +32,7 @@ import {GeoJsonLayer, IconLayer} from '@deck.gl/core';
 import {feature, featureCollection} from '@turf/helpers';
 import wellknown from 'wellknown';
 
-import {getApi} from '../utils';
+import {getApi, getStyle, hexToDeckColor} from '../utils';
 import { EventBus } from '../event-bus';
 import mapStore from '../map-communication';
 
@@ -26,12 +43,6 @@ let startPoint = { center: [-87.9074, 41.9742], zoom: 13, pitch: 0, bearing: 0 }
 
 export default {
     name: 'AnalysisScreen',
-    // beforeRouteEnter: function(to, from, next) {
-    //     next(vm => {
-    //         vm.active = true;
-    //         vm.start();
-    //     })
-    // },
     beforeRouteLeave: function(to, from, next) {
         this.end();
         this.active = false;
@@ -48,17 +59,26 @@ export default {
         active: false,
         displayTransport: true,
         hoveredBeat: null,
-        selectedBeat: null
+        selectedBeat: null,
+        selectedBeatInfo: null,
+        datasets: datasets,
+        style: null
     }),
     methods: {
         start: function() {
             EventBus.$on('analysis-select-beat', this.selectBeat);
 
-            Vue.nextTick(() => {
-                this.loadBeats();
-                this.loadRoutes();
-                this.loadStops();
-            });
+            var vm = this;
+            getStyle()
+                .then(data => {
+                    vm.style = data;
+
+                    Vue.nextTick(() => {
+                        this.loadBeats();
+                        this.loadRoutes();
+                        this.loadStops();
+                    });
+                });
         },
         end: function() {
             this.removeBeats();
@@ -66,13 +86,15 @@ export default {
             this.removeRoutes();
         },
         selectBeat: function(beatNumber) {
-            if(beatNumber) {
-                if(this.selectedBeat == beatNumber) {
-                    this.setBeatSelection(null);
-                } else {
-                    this.setBeatSelection(beatNumber);
-                }
+            if(!beatNumber || this.selectedBeat == beatNumber) {
+                this.setBeatSelection(null);
+                this.selectedBeat = null;
+            } else {
+                this.setBeatSelection(beatNumber);
+                this.selectedBeat = beatNumber;
             }
+            this.selectedBeatInfo = beatNumber &&
+                datasets.beats.features.filter(x => x.properties.beat_number == beatNumber)[0].properties;
         },
         updateLayerVisibility: function(){
             Vue.nextTick(() => {
@@ -94,7 +116,8 @@ export default {
                     let geojson = featureCollection(
                         data.map(x => feature(wellknown(x.wkt), {
                             beat_number: x.beat_number,
-                            population: x.population
+                            population: x.population,
+                            cluster: x.cluster
                         }))
                     );
 
@@ -116,19 +139,28 @@ export default {
                 }
             });
 
+            console.log(this.style);
+            console.log(this.style['analysis-cluster-color-0']);
+            console.log(datasets.beats);
+            //let colorStops = [...Array(7).keys()].map(x => [x, this.style['analysis-cluster-color-'+x]]).flatten();
             EventBus.$emit('add-layer', [{
                 id: 'beats-shape',
                 type: 'fill',
                 source: 'beats',
                 paint: {
-                    'fill-color':
-                    [
-                        'interpolate',
-                        ['linear'],
-                        ['get', 'population'],
-                        0, '#fff',
-                        27000, '#f00'
-                    ],
+                    'fill-color': {
+                        property: 'cluster',
+                        type: 'categorical',
+                        stops: [
+                            [0, this.style['analysis-cluster-color-0']],
+                            [1, this.style['analysis-cluster-color-1']],
+                            [2, this.style['analysis-cluster-color-2']],
+                            [3, this.style['analysis-cluster-color-3']],
+                            [4, this.style['analysis-cluster-color-4']],
+                            [5, this.style['analysis-cluster-color-5']],
+                            [6, this.style['analysis-cluster-color-6']]
+                        ]
+                    },
                     'fill-opacity': 0.5
                 }
             }, 'waterway-label']);
@@ -198,15 +230,14 @@ export default {
         },
         setBeatSelection: function(beatNumber) {
             EventBus.$emit('map-filter', ['beats-selection-outline', ['==', 'beat_number', beatNumber || '']]);
-            this.selectedBeat = beatNumber;
         },
         removeBeats: function() {
             EventBus.$emit('remove-layer', 'beats-shape');
             EventBus.$emit('remove-layer', 'beats-outline');
             EventBus.$emit('remove-layer', 'beats-hover-outline');
             EventBus.$emit('remove-layer', 'beats-selection-outline');
-            
             EventBus.$emit('remove-source', 'beats');
+
             EventBus.$emit('remove-deck-layer', 'beats-picker');
         },
         loadStops: function(){
@@ -254,8 +285,8 @@ export default {
                 sizeScale: 15,
                 getPosition: d => [d.lon, d.lat],
                 getIcon: d => d.type.toLowerCase(),
-                getSize: d => 3,
-                getColor: d => [255, 255, 255, 255],
+                getSize: d => 2,
+                getColor: d => hexToDeckColor(this.style['analysis-transport-color']),
                 getVisible: d => context.displayTransport
                 //onHover: ({object}) => setTooltip(`${object.name}\n${object.address}`)
             });
@@ -299,8 +330,7 @@ export default {
                 extruded: false,
                 lineWidthScale: 20,
                 lineWidthMinPixels: 2,
-                // getFillColor: d => [160, 160, 180, 200],
-                getLineColor: d => [240, 240, 240, 255],
+                getLineColor: d => hexToDeckColor(this.style['analysis-transport-color']),
                 // getRadius: d => 100,
                 getLineWidth: d => 1,
                 getVisible: d => context.displayTransport
@@ -318,7 +348,14 @@ export default {
 </script>
 
 <style scoped>
-        .analysis-screen {
+    .analysis-screen {
         color: white;
+    }
+
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity .5s;
+    }
+    .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
     }
 </style>

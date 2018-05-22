@@ -1,6 +1,6 @@
 <template>
     <div id="app">
-        <b-navbar id="navbar" toggleable="md" type="dark" variant="crime">
+        <b-navbar id="navbar" toggleable="md" :type="bgType" class="bg-transparent">
             <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
             <b-collapse is-nav id="nav_collapse">
                 <b-navbar-nav class="ml-auto">
@@ -84,7 +84,8 @@
             minLat: 41.5,
             maxLat: 42.1,
             minLon: -88,
-            maxLon: -87.3
+            maxLon: -87.3,
+            bgType: 'dark'
         }),
         computed: {
             viewStateString: function() {
@@ -96,6 +97,7 @@
                 let toOrder = routeOrder.indexOf(to.path);
                 let fromOrder = routeOrder.indexOf(from.path);
                 this.transitionName = fromOrder < toOrder ? 'slide-up' : 'slide-down';
+                this.bgType = to.meta.style;
             }
         },
         mounted: function() {
