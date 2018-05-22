@@ -103,9 +103,20 @@ api.get('/style', function(req, res) {
 
 
 api.get('/time', function (req, res) {
-        var sql = "SELECT FBICode, Month, Hour, Count from heatmaps";
+
+        // If all the variables are provided connect to the database
+        if (req.query.type) {
+                // Parse the values from the URL into numbers for the query
+                var type = req.query.type;
+
+                // SQL Statement to run
+                var sql = "SELECT FBICode, Month, Hour, Count FROM heatmaps WHERE  FBICode = " + mysql.escape(type);
 
         sqlResponse(sql, res);
+        } else {
+                // If all the URL variables are not passed send an empty string to the user
+                res.send("");
+        }
 });
 
 
