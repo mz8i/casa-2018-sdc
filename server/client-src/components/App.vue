@@ -42,6 +42,7 @@
     import Map from '../mapbox';
     import { EventBus } from '../event-bus';
     import { clamp } from '../utils';
+    import mapStore from '../map-communication';
 
     const mapboxToken = 'pk.eyJ1IjoianVsaWFuaG9mZm1hbm5hbnRvbiIsImEiOiJjamhlcHM2a2Iwd3d2M2RxdnBzbmY5bm5qIn0.PL5CUOX7N6PVtFt838hZsg';//"pk.eyJ1IjoibXo4aSIsImEiOiJjamg0d2pxcDMxNXFzMnFwdG52aG81cTc5In0.CksGFWg2x0MiWRShMnYsxQ";
     const initialViewState = {
@@ -61,6 +62,9 @@
 
     export default {
         created: function() {
+            this.mapFilters = {};
+
+
             EventBus.$on('fly-to', this.flyTo);
             EventBus.$on('add-source', this.addSource);
             EventBus.$on('add-layer', this.addLayer);
@@ -70,12 +74,13 @@
             EventBus.$on('deck-off', this.deckOff);
             EventBus.$on('add-deck-layer', this.addDeckLayer);
             EventBus.$on('remove-deck-layer', this.removeDeckLayer);
+            EventBus.$on('map-filter', this.mapFilter);
         },
         data: () => ({
             viewState: {},
             transitionName: 'slide-up',
             minZoom: 10,
-            maxZoom: 17,
+            maxZoom: 15,
             minLat: 41.5,
             maxLat: 42.1,
             minLon: -88,
@@ -147,6 +152,8 @@
             this.$refs.deck.addEventListener('contextmenu', e => e.preventDefault());
 
             mapObj._map.on('style.load', () => EventBus.$emit('map-loaded'));
+
+            requestAnimationFrame(this.updateAnimation);
         },
         methods: {
             setViewState: function(viewState) {
@@ -194,6 +201,12 @@
                 }
             },
 
+            mapFilter: function(filterParams) {
+                const [layerId, condition] = filterParams;
+                mapObj._map.setFilter(layerId, condition);
+                this.mapFilters[layerId] = condition;
+            },
+
             deckOn: function(){
                 document.getElementById('deckgl-overlay').style.display = 'block';
             },
@@ -216,8 +229,12 @@
                 deckgl.setProps({layers});
             },
 
-            addChicagoOutline: function() {
-                
+            updateAnimation: function() {
+                requestAnimationFrame(this.updateAnimation);
+
+                for(const [key, value] of  Object.entries(mapStore.mapFilters)) {
+                    mapObj._map.setFilter(key, value);
+                }
             }
         }
     }

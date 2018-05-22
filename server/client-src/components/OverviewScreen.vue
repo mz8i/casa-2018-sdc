@@ -60,6 +60,7 @@ export default {
         active: false
     }),
     created: function() {
+        this.style = {};
         this.hexLayer = null;
         this.datasets = datasets;
         this.yearTimeout = null;
@@ -79,13 +80,16 @@ export default {
     },
     methods: {
         start: function() {
-            Vue.nextTick(() => {
-                this.loadCrimeTypes();
-                this.loadCrimes(this.year, this.crimeType);
-                this.addChicagoOutline();
-                this.loadCommunityOutlines();
-                var vm = this;
-                getStyle().then(data => vm.style = data);
+            var vm = this;
+            getStyle().then(data => {
+                vm.style = data;
+                Vue.nextTick(() => {
+                    this.loadCrimeTypes();
+                    this.loadCrimes(this.year, this.crimeType);
+                    this.addChicagoOutline();
+                    this.loadCommunityOutlines();
+                    
+                });
             });
         },
         end: function() {
@@ -108,7 +112,7 @@ export default {
                         type: 'line',
                         source: 'chicago-outline',
                         paint: {
-                            'line-color': '#eee',
+                            'line-color': this.style['overview-chicago-outline-color'],
                             'line-width': 2
                         }
                     };

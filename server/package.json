@@ -42,7 +42,7 @@
     "dev": "webpack --watch --mode development --progress",
     "build": "webpack --mode production --progress",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "devserver": "nodemon -w . --delay 2 app.js"
+    "devserver": "nodemon -w . --delay 1 app.js"
   },
   "repository": {
     "type": "git",

@@ -36,7 +36,7 @@ export default {
         left: 0;
         right: 0;
 
-        background-color: antiquewhite;
+        background-color: white;
 
         color: '#111';
     }

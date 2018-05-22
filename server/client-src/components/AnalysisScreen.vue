@@ -17,6 +17,7 @@ import wellknown from 'wellknown';
 
 import {getApi} from '../utils';
 import { EventBus } from '../event-bus';
+import mapStore from '../map-communication';
 
 
 let datasets = {};
@@ -39,16 +40,20 @@ export default {
     created: function() {
         this.stopsLayer = null;
         this.routesLayer = null;
-        console.log('created');
+
         this.active = true;
         this.start();
     },
     data: () => ({
         active: false,
-        displayTransport: true
+        displayTransport: true,
+        hoveredBeat: null,
+        selectedBeat: null
     }),
     methods: {
         start: function() {
+            EventBus.$on('analysis-select-beat', this.selectBeat);
+
             Vue.nextTick(() => {
                 this.loadBeats();
                 this.loadRoutes();
@@ -59,6 +64,15 @@ export default {
             this.removeBeats();
             this.removeStops();
             this.removeRoutes();
+        },
+        selectBeat: function(beatNumber) {
+            if(beatNumber) {
+                if(this.selectedBeat == beatNumber) {
+                    this.setBeatSelection(null);
+                } else {
+                    this.setBeatSelection(beatNumber);
+                }
+            }
         },
         updateLayerVisibility: function(){
             Vue.nextTick(() => {
@@ -128,11 +142,72 @@ export default {
                     'line-width': 2 
                 }
             }, 'waterway-label']);
+
+            EventBus.$emit('add-layer', [{
+                id: 'beats-selection-outline',
+                type: 'line',
+                source: 'beats',
+                paint: {
+                    'line-color': '#fff',
+                    'line-width': 4
+                },
+                filter: ["==", "beat_number", ""]
+            }, 'waterway-label']);
+
+            EventBus.$emit('add-layer', [{
+                id: 'beats-hover-outline',
+                type: 'line',
+                source: 'beats',
+                paint: {
+                    'line-color': '#fff',
+                    'line-width': 2
+                },
+                filter: ["==", "beat_number", ""]
+            }, 'waterway-label']);
+
+            var vm = this;
+            let transparentLayer = new GeoJsonLayer({
+                id: 'beats-picker',
+                pickable: true,
+                data: datasets.beats,
+                extruded: false,
+                stroked: false,
+                filled: true,
+                getFillColor: x => [255, 255, 255, 0],
+                onHover: ({object}) => vm.onBeatHover(object),
+                onClick: ({object}) => vm.selectBeat(object && object.properties.beat_number)
+            });
+
+            EventBus.$emit('add-deck-layer', transparentLayer);
+        },
+        onBeatHover: function(o) {
+            if(o) {
+                if(!this.hoveredBeat || o.properties.beat_number != this.hoveredBeat) {
+                    this.setBeatHoverFilter(o.properties.beat_number);
+                }
+            } else if(this.hoveredBeat){
+                this.setBeatHoverFilter(null);
+            }
+        },
+        setBeatHoverFilter: function(beatNumber) {
+            console.log('sent hover event');
+
+            // mapStore.mapFilters['beats-hover-outline'] = ["==", "beat_number", beat_number || ""];
+
+            this.hoveredBeat = beatNumber;
+        },
+        setBeatSelection: function(beatNumber) {
+            EventBus.$emit('map-filter', ['beats-selection-outline', ['==', 'beat_number', beatNumber || '']]);
+            this.selectedBeat = beatNumber;
         },
         removeBeats: function() {
             EventBus.$emit('remove-layer', 'beats-shape');
             EventBus.$emit('remove-layer', 'beats-outline');
+            EventBus.$emit('remove-layer', 'beats-hover-outline');
+            EventBus.$emit('remove-layer', 'beats-selection-outline');
+            
             EventBus.$emit('remove-source', 'beats');
+            EventBus.$emit('remove-deck-layer', 'beats-picker');
         },
         loadStops: function(){
             if(datasets.stops){
@@ -179,7 +254,7 @@ export default {
                 sizeScale: 15,
                 getPosition: d => [d.lon, d.lat],
                 getIcon: d => d.type.toLowerCase(),
-                getSize: d => 5,
+                getSize: d => 3,
                 getColor: d => [255, 255, 255, 255],
                 getVisible: d => context.displayTransport
                 //onHover: ({object}) => setTooltip(`${object.name}\n${object.address}`)
