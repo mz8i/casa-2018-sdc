@@ -102,5 +102,11 @@ api.get('/style', function(req, res) {
 });
 
 
+api.get('/time', function (req, res) {
+        var sql = "SELECT FBICode, Month, Hour, Count from heatmaps";
+
+        sqlResponse(sql, res);
+});
+
 
 module.exports = api;
