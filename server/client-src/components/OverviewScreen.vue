@@ -1,10 +1,11 @@
 <template>
     <div class="screen overview-screen">
-        <h1>Overview Screen test</h1>
-        <router-link to="time">Go to Time</router-link>
-        <div class="screen-control">
-            <input v-model="year" type="range" :min="minYear" :max="maxYear" step="1" @input="_onYearSliderInput" >
-            {{year}}
+        <div class="sidepanel">
+            <div class="sidepanel-container">
+                <b-form-input type="range" v-model="year" :min="minYear" :max="maxYear" step="1" @input="_onYearSliderInput">{{year}}</b-form-input> 
+                <b-form-select v-model="crimeType" @input="onCrimeInputChange" :options="crimeOptions"></b-form-select>
+            </div>
+        
             <br />
             <select v-model="crimeType" @input="onCrimeInputChange">
                 <option value="All">All</option>
@@ -55,6 +56,7 @@ export default {
         maxYear: 2017,
         crimeType: 'All',
         crimeTypes: [],
+        crimeOptions: ['All'],
         tooltipText: '',
         normaliseGlobal: true,
         active: false
@@ -77,6 +79,11 @@ export default {
         this.active = false;
         this.end();
         next();
+    },
+    watch: {
+        crimeTypes: function(newTypes, oldTypes) {
+            this.crimeOptions = [{value: 'All', text: 'All'}, ...newTypes];
+        }
     },
     methods: {
         start: function() {

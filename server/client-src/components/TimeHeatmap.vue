@@ -42,7 +42,7 @@ export default {
     name: 'TimeHeatmap',
     props,
     data: () => ({
-        crimeType: null,
+        crimeType: '03',
         data: null,
         width: 0,
         height: 0,

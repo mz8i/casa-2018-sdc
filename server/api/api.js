@@ -103,7 +103,7 @@ api.get('/style', function(req, res) {
 
 
 api.get('/time', function (req, res) {
-        var sql = "SELECT FBICode as type, Month as month, Hour as hour, Count as count FROM heatmaps";
+        var sql = "SELECT FBICode as type, Month as month, Hour as hour, Count as count, CountNorm as count_norm FROM heatmaps";
 
         if(req.query.type) sql += " WHERE  FBICode = " + mysql.escape(req.query.type);
 

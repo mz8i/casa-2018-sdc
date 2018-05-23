@@ -55,7 +55,7 @@
         pitch: 0
     };
 
-    let routeOrder = ['/intro', '/overview', '/time', '/analysis'];
+    let routeOrder = ['/', '/overview', '/time', '/analysis'];
 
     let mapObj = null;
     let deckgl = null;
@@ -70,6 +70,7 @@
 
 
             EventBus.$on('fly-to', this.flyTo);
+            EventBus.$on('jump-to', this.jumpTo);
             EventBus.$on('add-source', this.addSource);
             EventBus.$on('add-layer', this.addLayer);
             EventBus.$on('remove-layer', this.removeLayer);
@@ -175,6 +176,11 @@
             flyTo: function(flyOptions){
                 if(mapObj) {
                     mapObj._map.flyTo(flyOptions);
+                }
+            },
+            jumpTo: function(jumpOptions){
+                if(mapObj) {
+                    mapObj._map.jumpTo(jumpOptions);
                 }
             },
             addSource: function(sourceParams) {

@@ -18,7 +18,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 const router = new VueRouter({
     routes: [
-        { path: '/intro', component: IntroScreen, meta: {style:'dark'}},
+        { path: '/', component: IntroScreen, meta: {style:'dark'}},
         { path: '/overview', component: OverviewScreen, meta: {style: 'dark'}},
         { path: '/time', component: TimeScreen, meta: {style: 'light'}},
         { path: '/analysis', component: AnalysisScreen, meta: {style: 'dark'}}

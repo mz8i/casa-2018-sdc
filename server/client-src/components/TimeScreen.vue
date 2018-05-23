@@ -5,8 +5,10 @@
                 <b-col md="6" offset-md="3">
                     <time-heatmap class="time-map" :types="crimeTypes"></time-heatmap>
                 </b-col>
-                <b-col md="3">
-                    <h1>Some text here</h1>
+                <b-col md="3" class="sidepanel">
+                    <div class="sidepanel-container">
+                        <h5>Some text here</h5>
+                    </div>
                 </b-col>
             </b-row>
         </div>
@@ -54,7 +56,7 @@ export default {
         left: 0;
         right: 0;
 
-        background-color: white;
+        background-color: whitesmoke;
 
     }
 
