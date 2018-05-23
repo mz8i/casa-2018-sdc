@@ -47,7 +47,7 @@
                       Now, take a look at crimes catalogued as Larceny#### and then select those classified as Drug Abuse###.
                       They show profound differences on their spatial distribution!
                     </p>
-                        <a href="#" v-b-toggle.accordion-time variant="info">Go to temporal analysis</a>
+                        <a href="#" @click="goToTemporal" v-b-toggle.accordion-time variant="info">Go to temporal analysis</a>
                 </b-card-body>
             </b-collapse>
         </b-card>
@@ -132,6 +132,9 @@ export default {
         },
         goToMidwesternOverview: function() {
             EventBus.$emit('fly-to', overviewMidwestern);
+        },
+        goToTemporal: function() {
+            EventBus.$emit('route-push', '/time');
         }
 
     }
