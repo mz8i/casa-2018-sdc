@@ -1,7 +1,7 @@
 // import * as d3 from 'd3';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import BootstrapVue from 'bootstrap-vue'
+import BootstrapVue from 'bootstrap-vue';
 
 import App from './components/App.vue';
 import IntroScreen from './components/IntroScreen.vue';

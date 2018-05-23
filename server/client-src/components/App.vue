@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+        <story-navigation></story-navigation>
         <b-navbar id="navbar" toggleable="md" :type="bgType" class="bg-transparent">
             <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
             <b-collapse is-nav id="nav_collapse">
@@ -40,6 +41,7 @@
     import {Deck, GeoJsonLayer, HexagonLayer, MapController} from '@deck.gl/core';
 
     import Map from '../mapbox';
+    import StoryNavigation from './StoryNavigation.vue';
     import { EventBus } from '../event-bus';
     import { clamp } from '../utils';
     import mapStore from '../map-communication';
@@ -61,6 +63,8 @@
     let deckLayers = {};
 
     export default {
+        name: 'App',
+        components: {StoryNavigation},
         created: function() {
             this.mapFilters = {};
 
