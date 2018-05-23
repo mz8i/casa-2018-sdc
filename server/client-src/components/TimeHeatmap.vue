@@ -1,6 +1,7 @@
 <template>
     <div>
         <b-form-select v-model="crimeType" :options="types" class="mb-3" />
+        
         <svg :width="width" :height="height">
             <g :style="{transform: `translate(${margin.left}px, ${margin.top}px)`}">
             </g>

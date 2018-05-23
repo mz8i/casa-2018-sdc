@@ -44,8 +44,8 @@
                       and <a href='#' @click="goToSouthernOverview">southern</a> parts of the city.
                     </p>
                     <p class="card-text">
-                      Now, take a look at crimes catalogued as Larceny#### and then select those classified as Drug Abuse###.
-                      They show profound differences on their spatial distribution!
+                      Now, take a look at crimes catalogued as Larceny and then select those classified as Drug Abuse.
+                      They show profound differences in their spatial distribution!
                     </p>
                         <a href="#" @click="goToTemporal" v-b-toggle.accordion-time variant="info">Go to temporal analysis</a>
                 </b-card-body>
@@ -58,10 +58,8 @@
                 <b-card-body>
                     <p class="card-text">
                         Crime patterns are affected by time throughout the day and year, and also by the availability of light.
-
-
                     </p>
-                        <a href="#" v-b-toggle.accordion-analysis variant="info">Go to temporal analysis</a>
+                        <a href="#" @click="goToCluster" v-b-toggle.accordion-analysis variant="info">Go to cluster analysis</a>
                 </b-card-body>
             </b-collapse>
         </b-card>
@@ -73,16 +71,16 @@
                     <p class="card-text">
                         At this point you already know different spatio-temporal patterns of crime in Chicago.
                         All this information together adds up to finding groups with similarities along several characteristics.
-                        From the 7 groups in the map, let's take 'Hotspots'##### as an example.
+                        From the 7 groups in the map, let's take 'Hotspots' as an example.
                         This group present some of the most severe crimes (simple and aggravated assaults and battery, drug abuse, weapons violation)
-                        in an area that is well connected to public facilities. It's percentage of arrested crimes is in average high.
+                        in an area that is well connected to public facilities. Its percentage of arrested crimes is on average high.
 
                         Can you characterize the rest of the groups?
                         *Hint: think on the crime severity and commonness, density of population and connectivity to public facilities.
 
 
                     </p>
-                        <a href="#" v-b-toggle.accordion-intro variant="info">Go to back to start</a>
+                        <a href="#" v-b-toggle.accordion-intro variant="info">Go back to start</a>
                 </b-card-body>
             </b-collapse>
         </b-card>
@@ -143,6 +141,9 @@ export default {
         },
         goToTemporal: function() {
             EventBus.$emit('route-push', '/time');
+        },
+        goToCluster: function() {
+            EventBus.$emit('route-push', '/analysis');
         }
 
     }

@@ -5,7 +5,7 @@
                 <h3>Analysis - 2017</h3>
             </div>
             <div class="sidepanel-section">
-                <div class="alert alert-secondary">Click on beats to display aggregated information</div>
+                <div class="alert alert-secondary">Click on beats to display details</div>
                 <b-form-checkbox v-model="displayTransport" @change="updateLayerVisibility" >Show Metro lines and stations</b-form-checkbox>
             </div>
             <transition name="fade">
