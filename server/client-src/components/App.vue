@@ -5,21 +5,13 @@
             <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
             <b-collapse is-nav id="nav_collapse">
                 <b-navbar-nav class="ml-auto">
-                    <b-nav-item right to="intro">Introduction</b-nav-item>
+                    <b-nav-item right to="/">Introduction</b-nav-item>
                     <b-nav-item right to="overview">Overview</b-nav-item>
                     <b-nav-item right to="time">Temporal</b-nav-item>
                     <b-nav-item right to="analysis">Analysis</b-nav-item>
                 </b-navbar-nav>
             </b-collapse>
         </b-navbar>
-        <!-- <div class="navbar">
-            <div class="navbar-container">
-                <router-link to="intro">Introduction</router-link>
-                <router-link to="overview">Overview</router-link>
-                <router-link to="time">Temporal</router-link>
-                <router-link to="analysis">Analysis</router-link>
-            </div>         
-        </div> -->
         <div id="map-container">
             <div id="map"></div>
             <canvas id="deck-canvas" ref='deck'></canvas>

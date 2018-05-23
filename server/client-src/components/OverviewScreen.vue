@@ -1,20 +1,23 @@
 <template>
     <div class="screen overview-screen">
         <div class="sidepanel">
-            <div class="sidepanel-container">
-                <b-form-input type="range" v-model="year" :min="minYear" :max="maxYear" step="1" @input="_onYearSliderInput">{{year}}</b-form-input> 
-                <b-form-select v-model="crimeType" @input="onCrimeInputChange" :options="crimeOptions"></b-form-select>
+            <div class="sidepanel-section">
+                <label for="yearInput">Year: {{year}}</label>
+                <b-form-input id="yearInput" type="range" v-model="year" :min="minYear" :max="maxYear" step="1" @input="_onYearSliderInput"></b-form-input>
+                <br />
+                <label for="crimeTypeInput">Crime category:</label>
+                <b-form-select id="crimeTypeInput" v-model="crimeType" @input="onCrimeInputChange" :options="crimeOptions"></b-form-select>
+                <br />
+                <label><b-form-checkbox variant="warning" v-model="normaliseGlobal" @input="onCrimeInputChange"></b-form-checkbox>Normalise globally</label>
             </div>
         
-            <br />
-            <select v-model="crimeType" @input="onCrimeInputChange">
-                <option value="All">All</option>
-                <option v-for="ct in crimeTypes" :key="ct.code" :value="ct.code"> {{ct.type}} </option>
-            </select>
-            <br />
+            <!-- <br />
             <label><input v-model="normaliseGlobal" type="checkbox" @input="onCrimeInputChange">Normalise globally</label>
-            <br />
-            <span v-html="tooltipText"></span>
+            <br /> -->
+            <transition name="fade">
+                <div class="sidepanel-section" v-if="tooltipText" v-html="tooltipText">
+                </div>
+            </transition>
         </div>
     </div>
 </template>
@@ -50,6 +53,7 @@ function getCrimesKey(year, type){
 
 export default {
     name: 'OverviewScreen',
+    components: {},
     data: () => ({
         year: 2017,
         minYear: 2001,
@@ -82,7 +86,8 @@ export default {
     },
     watch: {
         crimeTypes: function(newTypes, oldTypes) {
-            this.crimeOptions = [{value: 'All', text: 'All'}, ...newTypes];
+            console.log('update options');
+            this.crimeOptions = [{value: 'All', text: 'All'}, ...newTypes.map(x => ({value: x.code, text: x.type}))];
         }
     },
     methods: {
@@ -240,7 +245,7 @@ export default {
         },
         getCommunityArea: function(index) {
             let key = getCrimesKey(this.year, this.crimeType);
-            let community = "Loading community areas...";
+            let community = "Loading areas...";
             if(this.datasets.hexCommunityAreas[key]){
                 community = this.datasets.hexCommunityAreas[key][""+index];
             }
@@ -260,7 +265,7 @@ export default {
         getTooltipText: function(hoveredBar) {
             if(!hoveredBar) return "";
 
-            return `${this.getCommunityArea(hoveredBar.index)} <br /> Count: ${hoveredBar.points.length}`;
+            return `<p>Area: ${this.getCommunityArea(hoveredBar.index)} </p> <p> Crimes: ${hoveredBar.points.length}</p>`;
         },
         setTooltip: function(text){
             this.tooltipText = text;
@@ -271,9 +276,9 @@ export default {
 </script>
 
 <style scoped>
-    .overview-screen {
+    /* .overview-screen {
         color: white;
-    }
+    } */
 
     .screen-control {
         position: absolute;

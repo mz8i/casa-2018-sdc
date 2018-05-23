@@ -42,7 +42,7 @@ export default {
     name: 'TimeHeatmap',
     props,
     data: () => ({
-        crimeType: '03',
+        crimeType: null,
         data: null,
         width: 0,
         height: 0,
@@ -71,6 +71,7 @@ export default {
     },
     mounted() {
         window.addEventListener('resize', this.onResize);
+        this.crimeType = '03';
         this.onResize();
     },
     beforeDestroy() {

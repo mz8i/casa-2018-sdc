@@ -1,7 +1,7 @@
 <template>
-    <div id="story" class="" role="tablist">
+    <div id="story" class="collapsed" role="tablist">
         <div id="hamburger">
-            <b-btn class="glyphicon glyphicon-menu-hamburger" @click="onHamburgerClick">S</b-btn>
+            <b-btn @click="onHamburgerClick">S</b-btn>
         </div>
         <b-card no-body class="mb-1">
             <!-- <b-card-header header-tag="header" class="p-1" role="tab"> -->
@@ -81,10 +81,13 @@
 
 <script>
 
+import Icon from 'vue-awesome';
+
 import { EventBus } from '../event-bus';
 
 export default {
     name: 'StoryNavigation',
+    components: {Icon},
     data: () => ({}),
     created: function() {
 
@@ -138,5 +141,11 @@ export default {
         border-bottom-right-radius: 4px;
 
         background-color: whitesmoke;
+    }
+
+    #hamburger button {
+        color: #222;
+        background-color: rgba(0,0,0,0);
+        border: none;
     }
 </style>

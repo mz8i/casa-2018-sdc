@@ -27,7 +27,7 @@
 <script>
 
 import Vue from 'vue';
-import {GeoJsonLayer, IconLayer} from '@deck.gl/core';
+import {GeoJsonLayer, IconLayer, ScatterplotLayer} from '@deck.gl/core';
 
 import {feature, featureCollection} from '@turf/helpers';
 import wellknown from 'wellknown';
@@ -258,38 +258,55 @@ export default {
 
             var context = this;
 
-            this.stopsLayer = new IconLayer({
+            this.stopsLayer = new ScatterplotLayer({
                 id: 'stop-icons',
                 data: datasets.stops,
                 visible: this.displayTransport,
                 pickable: true,
-                iconAtlas: 'static/images/icon-atlas.png',
-                iconMapping: {
-                    rail: {
-                        x: 0,
-                        y: 0,
-                        width: 128,
-                        height: 128,
-                        anchorY: 128,
-                        mask: true
-                    }, 
-                    bus: {
-                        x: 128,
-                        y: 0,
-                        width: 128,
-                        height: 128,
-                        anchorY: 128,
-                        mask: true
-                    }, 
-                },
-                sizeScale: 15,
                 getPosition: d => [d.lon, d.lat],
-                getIcon: d => d.type.toLowerCase(),
-                getSize: d => 2,
                 getColor: d => hexToDeckColor(this.style['analysis-transport-color']),
-                getVisible: d => context.displayTransport
-                //onHover: ({object}) => setTooltip(`${object.name}\n${object.address}`)
+                getVisible: d => context.displayTransport,
+                opacity: 1,
+                radiusScale: 10,
+                radiusMinPixels: 1,
+                radiusMaxPixels: 100,
+                getRadius: d => 5,
             });
+
+            
+
+            // this.stopsLayer = new IconLayer({
+            //     id: 'stop-icons',
+            //     data: datasets.stops,
+            //     visible: this.displayTransport,
+            //     pickable: true,
+            //     iconAtlas: 'static/images/icon-atlas.png',
+            //     iconMapping: {
+            //         rail: {
+            //             x: 0,
+            //             y: 0,
+            //             width: 128,
+            //             height: 128,
+            //             anchorY: 128,
+            //             mask: true
+            //         }, 
+            //         bus: {
+            //             x: 128,
+            //             y: 0,
+            //             width: 128,
+            //             height: 128,
+            //             anchorY: 128,
+            //             mask: true
+            //         }, 
+            //     },
+            //     sizeScale: 15,
+            //     getPosition: d => [d.lon, d.lat],
+            //     getIcon: d => d.type.toLowerCase(),
+            //     getSize: d => 2,
+            //     getColor: d => hexToDeckColor(this.style['analysis-transport-color']),
+            //     getVisible: d => context.displayTransport
+            //     //onHover: ({object}) => setTooltip(`${object.name}\n${object.address}`)
+            // });
 
             EventBus.$emit('add-deck-layer', this.stopsLayer);
         },
@@ -348,14 +365,7 @@ export default {
 </script>
 
 <style scoped>
-    .analysis-screen {
+    /* .analysis-screen {
         color: white;
-    }
-
-    .fade-enter-active, .fade-leave-active {
-        transition: opacity .5s;
-    }
-    .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-        opacity: 0;
-    }
+    } */
 </style>
