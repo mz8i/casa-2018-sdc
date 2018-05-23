@@ -34,18 +34,18 @@
                         Chicago (Illinois) has witnessed high crime rates for over 50 years
                         and has been deemed as particularly dangerous among big cities in the United States
                         coming to the spotlight due to its violent nature. Explore spatio-temporal patterns
-                        through the analysis of over 6.000.000 geolocated crimes in the city.
+                        through the analysis of over 6.000.000 geo-located crimes in the city.
 
                     </p>
                     <p class="card-text">
                       Even though crime numbers are descending through the years, a few areas seem to remain as hotspots throughout time.
-                      Higher density of delinquency is observed around the middle eastern part of the city (Downtown)
-                      throughout all the years. Moreover, crime seems to accumulate also in the midwestern
-                      and south parts of the city.
+                      Higher density of delinquency is observed around the middle eastern part of the city (Downtown)####
+                      throughout all the years. Moreover, crime seems to accumulate also in the midwestern####
+                      and southern#### parts of the city.
                     </p>
                     <p class="card-text">
-                    Now, take a look at crimes catalogued as Larceny and then select those classified as Drug Abuse.
-                    They show profound differences on their spatial distribution!
+                      Now, take a look at crimes catalogued as Larceny#### and then select those classified as Drug Abuse###.
+                      They show profound differences on their spatial distribution!
                     </p>
                         <a href="#" v-b-toggle.accordion-time variant="info">Go to temporal analysis</a>
                 </b-card-body>
@@ -57,7 +57,8 @@
             <b-collapse id="accordion-time" accordion="story-accordion" role="tabpanel">
                 <b-card-body>
                     <p class="card-text">
-                        Some overview text here
+                        Crime patterns are affected by time throughout the day and year, and also by the availability of light.
+
 
                     </p>
                         <a href="#" v-b-toggle.accordion-analysis variant="info">Go to temporal analysis</a>
@@ -70,7 +71,8 @@
             <b-collapse id="accordion-analysis" accordion="story-accordion" role="tabpanel">
                 <b-card-body>
                     <p class="card-text">
-                        Some analysis text here
+                        Analysis text here
+
                     </p>
                         <a href="#" v-b-toggle.accordion-intro variant="info">Go to back to start</a>
                 </b-card-body>
