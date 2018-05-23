@@ -5,10 +5,13 @@
                 <label for="yearInput">Year: {{year}}</label>
                 <b-form-input id="yearInput" type="range" v-model="year" :min="minYear" :max="maxYear" step="1" @input="_onYearSliderInput"></b-form-input>
                 <br />
-                <label for="crimeTypeInput">Crime category:</label>
-                <b-form-select id="crimeTypeInput" v-model="crimeType" @input="onCrimeInputChange" :options="crimeOptions"></b-form-select>
-                <br />
-                <label><b-form-checkbox variant="warning" v-model="normaliseGlobal" @input="onCrimeInputChange"></b-form-checkbox>Normalise globally</label>
+                <div>
+                    <label for="crimeTypeInput">Crime category:</label>
+                    <b-form-select id="crimeTypeInput" v-model="crimeType" @input="onCrimeInputChange" :options="crimeOptions"></b-form-select>
+                </div>
+                <div>
+                    <b-form-checkbox variant="warning" v-model="normaliseGlobal" @input="onCrimeInputChange">Normalise globally</b-form-checkbox>
+                </div>
             </div>
         
             <!-- <br />
@@ -72,13 +75,10 @@ export default {
         this.yearTimeout = null;
         this.active = true;
         this.start();
+
+        EventBus.$on('overview-choose-crime-type', this.chooseCrimeType);
+        EventBus.$on('overview-choose-year', this.chooseYear);
     },
-    // beforeRouteEnter: function(to, from, next) {
-    //     next(vm => {
-    //         vm.active = true;
-    //         vm.start();
-    //     })
-    // },
     beforeRouteLeave: function(to, from, next) {
         this.active = false;
         this.end();
@@ -107,6 +107,12 @@ export default {
         end: function() {
             this.removeHexagons();
             this.removeChicagoOutline();
+        },
+        chooseYear: function(year) {
+            this.year = year;
+        },
+        chooseCrimeType: function(type) {
+            this.crimeType = type;
         },
         addChicagoOutline: function(){
             getApi('/api/chicago/wkt')

@@ -1,5 +1,5 @@
 <template>
-    <div id="story" class="collapsed" role="tablist">
+    <div id="story" class="" role="tablist">
         <div id="hamburger">
             <b-btn @click="onHamburgerClick">S</b-btn>
         </div>
@@ -20,7 +20,7 @@
 
                         Go to the Overview to start this journey!
                     </p>
-                    <a href="#" v-b-toggle.accordion-overview variant="info">Go to overview</a>
+                    <a href="#" @click="goToOverview" v-b-toggle.accordion-overview variant="info">Go to overview</a>
                 </b-card-body>
 
             </b-collapse>
@@ -40,8 +40,8 @@
                     <p class="card-text">
                       Even though crime numbers are descending through the years, a few areas seem to remain as hotspots throughout time.
                       Higher density of delinquency is observed around the middle eastern part of the city (Downtown)####
-                      throughout all the years. Moreover, crime seems to accumulate also in the midwestern####
-                      and southern#### parts of the city.
+                      throughout all the years. Moreover, crime seems to accumulate also in the <a href='#' @click="goToMidwesternOverview">midwestern</a>
+                      and <a href='#' @click="goToSouthernOverview">southern</a> parts of the city.
                     </p>
                     <p class="card-text">
                       Now, take a look at crimes catalogued as Larceny#### and then select those classified as Drug Abuse###.
@@ -83,6 +83,30 @@
 
 <script>
 
+let overviewFirstFly = {
+    center: [-87.63910300089432, 41.8200475628504],
+"zoom": 10.88618617155909,
+"bearing": -76.875,
+"pitch": 59.870860830890294,
+speed: 0.5
+};
+
+let overviewMidwestern = {
+   center:[ -87.72582011248245,41.88565159836172],
+  "zoom": 11.506349861577503,
+  "bearing": 40.642776341305826,
+  "pitch": 47.89794514978476,
+  speed: 0.5
+}
+
+let overviewSouthern = {
+    center:[-87.64282874000602, 41.76180654465469],
+  "zoom": 12.126513551595915,
+  "bearing": 3.0603587588882424,
+  "pitch": 39.89983739395454,
+  speed: 0.5
+};
+
 import Icon from 'vue-awesome';
 
 import { EventBus } from '../event-bus';
@@ -98,6 +122,17 @@ export default {
         onHamburgerClick: function(){
             document.getElementById('story').classList.toggle('collapsed');
         },
+
+        goToOverview: function() {
+            EventBus.$emit('route-push', '/overview');
+            EventBus.$emit('fly-to', overviewFirstFly);
+        },
+        goToSouthernOverview: function() {
+            EventBus.$emit('fly-to', overviewSouthern);
+        },
+        goToMidwesternOverview: function() {
+            EventBus.$emit('fly-to', overviewMidwestern);
+        }
 
     }
 }

@@ -72,6 +72,7 @@
             EventBus.$on('add-deck-layer', this.addDeckLayer);
             EventBus.$on('remove-deck-layer', this.removeDeckLayer);
             EventBus.$on('map-filter', this.mapFilter);
+            EventBus.$on('route-push', this.routePush);
         },
         data: () => ({
             viewState: {},
@@ -155,6 +156,9 @@
             requestAnimationFrame(this.updateAnimation);
         },
         methods: {
+            routePush: function(route) {
+                this.$router.push(route);
+            },
             setViewState: function(viewState) {
                 const {longitude, latitude, zoom, bearing, pitch} = viewState;
                 this.viewState = {

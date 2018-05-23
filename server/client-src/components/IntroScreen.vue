@@ -21,63 +21,68 @@ export default {
     name: 'IntroScreen',
     beforeRouteEnter: function(to, from, next) {
         next(vm => {
+            vm.active = true;
             vm.start();
         })
     },
     beforeRouteLeave: function(to, from, next) {
         this.end();
+        this.active = false;
         next();
     },
     created: function() {
         this.animationFrame = null;
     },
+    data: () => ({
+        active: false
+    }),
     methods: {
         start: function() {
-            setTimeout(() => EventBus.$emit('fly-to', startPoint), 2000);
+            EventBus.$emit('jump-to', startPoint);
 
-            setTimeout(() => {
-                this.animationFrame = requestAnimationFrame(this.animate);
-                this.startTime = Date.now();
+            // setTimeout(() => {
+                // this.animationFrame = requestAnimationFrame(this.animate);
+                // this.startTime = Date.now();
 
-                EventBus.$emit('add-layer', [{
-                    'id': '3d-buildings',
-                    'source': 'composite',
-                    'source-layer': 'building',
-                    'filter': ['==', 'extrude', 'true'],
-                    'type': 'fill-extrusion',
-                    'minzoom': 9,
-                    'paint': {
-                        'fill-extrusion-color': '#aaa',
+                // EventBus.$emit('add-layer', [{
+                //     'id': '3d-buildings',
+                //     'source': 'composite',
+                //     'source-layer': 'building',
+                //     'filter': ['==', 'extrude', 'true'],
+                //     'type': 'fill-extrusion',
+                //     'minzoom': 9,
+                //     'paint': {
+                //         'fill-extrusion-color': '#aaa',
 
-                        // use an 'interpolate' expression to add a smooth transition effect to the
-                        // buildings as the user zooms in
-                        'fill-extrusion-height': [
-                            // "interpolate", ["linear"], ["zoom"],
-                            // 15, 0,
-                            // 15.05, 
-                            ["get", "height"]
-                        ],
-                        // 'fill-extrusion-base': [
-                        //     "interpolate", ["linear"], ["zoom"],
-                        //     15, 0,
-                        //     15.05, ["get", "min_height"]
-                        // ],
-                        'fill-extrusion-opacity': 1
-                    }
-                }, 'waterway-label']);
-            }, 7000);
+                //         // use an 'interpolate' expression to add a smooth transition effect to the
+                //         // buildings as the user zooms in
+                //         'fill-extrusion-height': [
+                //             // "interpolate", ["linear"], ["zoom"],
+                //             // 15, 0,
+                //             // 15.05, 
+                //             ["get", "height"]
+                //         ],
+                //         // 'fill-extrusion-base': [
+                //         //     "interpolate", ["linear"], ["zoom"],
+                //         //     15, 0,
+                //         //     15.05, ["get", "min_height"]
+                //         // ],
+                //         'fill-extrusion-opacity': 1
+                //     }
+                // }, 'waterway-label']);
+            // }, 7000);
         },
 
         end: function() {
-            EventBus.$emit('remove-layer', '3d-buildings');
             cancelAnimationFrame(this.animationFrame);
+            EventBus.$emit('remove-layer', '3d-buildings');
         },
         animate: function(timestamp) {
+            if(this.active) this.animationFrame = requestAnimationFrame(this.animate);
             let progress = timestamp - this.startTime;
             let bearing = (startPoint.bearing + progress / 500) % 360;
             let newView = Object.assign({}, startPoint, {bearing});
             EventBus.$emit('jump-to', newView);
-            this.animationFrame = requestAnimationFrame(this.animate);
         }
     }
 }

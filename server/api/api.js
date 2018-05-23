@@ -68,7 +68,7 @@ api.get('/stops', function (req, res) {
 api.get('/calls/beats', function (req, res) {
 
         // SQL Statement to run
-        var sql = "SELECT beat_num, Type, count(*) from calls311 group by beat_num, Type" ;
+        var sql = "SELECT beat_num, Type, count(*) from calls311 group by beat_num, Type";
 
         sqlResponse(sql, res);
 

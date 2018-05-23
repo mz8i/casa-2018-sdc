@@ -5,18 +5,19 @@
                 <h3>Analysis - 2017</h3>
             </div>
             <div class="sidepanel-section">
-                <b-form-checkbox v-model="displayTransport" @change="updateLayerVisibility" >Transport</b-form-checkbox>
+                <div class="alert alert-secondary">Click on beats to display aggregated information</div>
+                <b-form-checkbox v-model="displayTransport" @change="updateLayerVisibility" >Show Metro lines and stations</b-form-checkbox>
             </div>
             <transition name="fade">
             <div class="sidepanel-section" v-if="selectedBeat">
                 <h5>Beat {{selectedBeat}}</h5>
                 <b-row>
-                    <b-col md="4">Population:</b-col>
-                    <b-col md="8">{{selectedBeatInfo.population}}</b-col>
+                    <b-col md="6">Population:</b-col>
+                    <b-col md="6">{{selectedBeatInfo.population}}</b-col>
                 </b-row>
                 <b-row>
-                    <b-col md="4">Transit stops:</b-col>
-                    <b-col md="8">??</b-col>
+                    <b-col md="6">Cluster:</b-col>
+                    <b-col md="6">{{selectedBeatInfo.cluster}} ({{clusterNames[selectedBeatInfo.cluster]}})</b-col>
                 </b-row>
             </div>
             </transition>
@@ -35,7 +36,6 @@ import wellknown from 'wellknown';
 import {getApi, getStyle, hexToDeckColor} from '../utils';
 import { EventBus } from '../event-bus';
 import mapStore from '../map-communication';
-
 
 let datasets = {};
 
@@ -62,7 +62,8 @@ export default {
         selectedBeat: null,
         selectedBeatInfo: null,
         datasets: datasets,
-        style: null
+        style: null,
+        clusterNames: ['Downtown', 'Hotspots', 'Airport', 'Suburbs', 'Rich area', 'Deprived area', 'Night scene']
     }),
     methods: {
         start: function() {
@@ -102,9 +103,6 @@ export default {
                 this.updateStops();
                 this.updateRoutes();
             });
-            // if(this.routesLayer){
-            //     this.routesLayer.visibile = this.displayTransport;
-            // }
         },
         loadBeats: function() {
             if(datasets.beats){
