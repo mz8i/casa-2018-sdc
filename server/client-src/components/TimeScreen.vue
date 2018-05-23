@@ -1,25 +1,43 @@
 <template>
-    <div id='time-background'>
-        <h1>Time Analysis</h1>
-        <router-link to="analysis">Go to Analysis</router-link>
-    </div>
+    <b-container fluid id="time-background" type="light">
+        <div id="time-container">
+            <b-row>
+                <b-col md="6" offset-md="3">
+                    <time-heatmap class="time-map" :types="crimeTypes"></time-heatmap>
+                </b-col>
+                <b-col md="3">
+                    <h1>Some text here</h1>
+                </b-col>
+            </b-row>
+        </div>
+    </b-container>
 </template>
 
 <script>
+
+import {getApi} from '../utils';
+import TimeHeatmap from './TimeHeatmap.vue';
+
 export default {
     name: 'TimeScreen',
-    beforeRouteEnter: function(to, from, next) {
-        next(vm => {
-            vm.start();
-        })
-    },
+    components: {TimeHeatmap},
     beforeRouteLeave: function(to, from, next) {
         this.end();
         next();
     },
+    created: function() {
+        this.start();
+    },
+    data: () => ({
+        crimeTypes: []
+    }),
     methods: {
         start: function() {
-
+            var vm = this;
+            getApi('/api/crimes/types')
+                .then(data => {
+                    vm.crimeTypes = data.map(d => ({value: d.code, text: d.type}));
+                });
         },
 
         end: function() {
@@ -38,6 +56,15 @@ export default {
 
         background-color: white;
 
-        color: '#111';
     }
+
+    #time-container {
+        margin-top: 100px;
+    }
+
+    .time-map {
+        height: 400px;
+    }
+
+
 </style>
