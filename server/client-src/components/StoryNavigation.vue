@@ -10,10 +10,15 @@
             <b-collapse id="accordion-intro" visible accordion="story-accordion" role="tabpanel">
                 <b-card-body>
                     <p class="card-text">
-                        Some story introduction here
+                        Travel through time and space discovering the crime patterns in Chicago:
+                        From the big picture of more than a decade of spatial trends,
+                        to the daily distribution of a specific type of crime and through its seasonal evolution.
                     </p>
                     <p class="card-text">
-                        More story introduction here
+                        How have crime trends in Chicago changed over the last 15 years?
+                        What characterizes the spatio-temporal relationships of crimes in Chicago?
+
+                        Go to the Overview to start this journey!
                     </p>
                     <a href="#" v-b-toggle.accordion-overview variant="info">Go to overview</a>
                 </b-card-body>
@@ -26,13 +31,21 @@
             <b-collapse id="accordion-overview" accordion="story-accordion" role="tabpanel">
                 <b-card-body>
                     <p class="card-text">
-                        Some overview text here
+                        Chicago (Illinois) has witnessed high crime rates for over 50 years
+                        and has been deemed as particularly dangerous among big cities in the United States
+                        coming to the spotlight due to its violent nature. Explore spatio-temporal patterns
+                        through the analysis of over 6.000.000 geolocated crimes in the city.
+
                     </p>
                     <p class="card-text">
-                        More overview text here
+                      Even though crime numbers are descending through the years, a few areas seem to remain as hotspots throughout time.
+                      Higher density of delinquency is observed around the middle eastern part of the city (Downtown)
+                      throughout all the years. Moreover, crime seems to accumulate also in the midwestern
+                      and south parts of the city.
                     </p>
                     <p class="card-text">
-                        And some more overview text here
+                    Now, take a look at crimes catalogued as Larceny and then select those classified as Drug Abuse.
+                    They show profound differences on their spatial distribution!
                     </p>
                         <a href="#" v-b-toggle.accordion-time variant="info">Go to temporal analysis</a>
                 </b-card-body>
