@@ -6,7 +6,13 @@
                     <time-heatmap class="time-map" :types="crimeTypes"></time-heatmap>
                 </b-col>
                 <b-col md="3">
-                    <h1>Some text here</h1>
+                    <h1> Each crime type is the result of many different factors. With our grouped data by hour and month,
+                    aggregated for 17 years, you can now look in which time periods and seasons it happens.
+                    As you can see in the example, Robbery crimes happen earlier at night in winter and significantly
+                    later in summer. Overall they mostly happen at night. They follow closely the sunset time and
+                    rarely happens between 4 am and 9 am.
+
+                    Try with different types of crimes to see if this pattern changes! </h1>
                 </b-col>
             </b-row>
         </div>
