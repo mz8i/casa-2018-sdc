@@ -71,7 +71,15 @@
             <b-collapse id="accordion-analysis" accordion="story-accordion" role="tabpanel">
                 <b-card-body>
                     <p class="card-text">
-                        Analysis text here
+                        At this point you already know different spatio-temporal patterns of crime in Chicago.
+                        All this information together adds up to finding groups with similarities along several characteristics.
+                        From the 7 groups in the map, let's take 'Hotspots'##### as an example.
+                        This group present some of the most severe crimes (simple and aggravated assaults and battery, drug abuse, weapons violation)
+                        in an area that is well connected to public facilities. It's percentage of arrested crimes is in average high.
+
+                        Can you characterize the rest of the groups?
+                        *Hint: think on the crime severity and commonness, density of population and connectivity to public facilities.
+
 
                     </p>
                         <a href="#" v-b-toggle.accordion-intro variant="info">Go to back to start</a>
